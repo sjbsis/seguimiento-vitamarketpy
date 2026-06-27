@@ -12,14 +12,14 @@ services:
       - JWT_SECRET=vita_seguimiento_secret_2026
       - PORT=3000
     networks:
-      - traefik-net
+      - root_default
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.seguimiento.rule=Host(`seguimiento.vitamarketpy.com`)"
       - "traefik.http.routers.seguimiento.entrypoints=websecure"
-      - "traefik.http.routers.seguimiento.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.seguimiento.tls.certresolver=mytlschallenge"
       - "traefik.http.services.seguimiento.loadbalancer.server.port=3000"
 
 networks:
-  traefik-net:
+  root_default:
     external: true
