@@ -117,13 +117,35 @@ app.get('/api/templates', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/api/templates', authMiddleware, adminOnly, async (req, res) => {
+  const { producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO mensajes_templates (producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+      [producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo !== false]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.put('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => {
-  const { texto_mensaje, activo } = req.body;
+  const { producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo } = req.body;
   try {
     await pool.query(
-      'UPDATE mensajes_templates SET texto_mensaje = $1, activo = $2 WHERE id = $3',
-      [texto_mensaje, activo, req.params.id]
+      'UPDATE mensajes_templates SET producto_id=$1, n_mensaje=$2, dia_envio=$3, tipo_mensaje=$4, texto_mensaje=$5, activo=$6 WHERE id=$7',
+      [producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo, req.params.id]
     );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM mensajes_templates WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

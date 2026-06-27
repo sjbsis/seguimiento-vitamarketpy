@@ -231,35 +231,95 @@ function renderTemplates() {
   `).join('');
 }
 
-function editTemplate(id) {
-  const t = templatesData.find(x => x.id === id);
-  openModal('Editar Template', `
+let productosData = [];
+
+async function loadProductos() {
+  if (productosData.length) return;
+  productosData = await api('/api/productos');
+}
+
+document.getElementById('nuevo-template-btn')?.addEventListener('click', async () => {
+  await loadProductos();
+  openModal('Nuevo Template', templateForm(null));
+});
+
+function templateForm(t) {
+  const productosOpts = productosData.map(p =>
+    `<option value="${p.id}" ${t?.producto_id == p.id ? 'selected' : ''}>${p.nombre}</option>`
+  ).join('');
+  return `
     <div class="form-group">
-      <label>${t.producto_nombre} — Mensaje #${t.n_mensaje} (Día ${t.dia_envio})</label>
+      <label>Producto</label>
+      <select id="t-producto">${productosOpts}</select>
+    </div>
+    <div class="form-group">
+      <label>N° Mensaje (1-5)</label>
+      <input type="number" id="t-n_mensaje" value="${t?.n_mensaje || 1}" min="1" max="5">
+    </div>
+    <div class="form-group">
+      <label>Día de envío</label>
+      <input type="number" id="t-dia_envio" value="${t?.dia_envio || 0}" min="0">
+    </div>
+    <div class="form-group">
+      <label>Tipo de mensaje</label>
+      <select id="t-tipo_mensaje">
+        <option value="Bienvenida" ${t?.tipo_mensaje === 'Bienvenida' ? 'selected' : ''}>Bienvenida</option>
+        <option value="Seguimiento" ${t?.tipo_mensaje === 'Seguimiento' ? 'selected' : ''}>Seguimiento</option>
+        <option value="Recompra" ${t?.tipo_mensaje === 'Recompra' ? 'selected' : ''}>Recompra</option>
+        <option value="Reactivacion" ${t?.tipo_mensaje === 'Reactivacion' ? 'selected' : ''}>Reactivación</option>
+      </select>
     </div>
     <div class="form-group">
       <label>Texto del mensaje</label>
-      <textarea class="template-textarea" id="edit-texto" rows="6">${t.texto_mensaje}</textarea>
+      <textarea class="template-textarea" id="t-texto" rows="7">${t?.texto_mensaje || ''}</textarea>
     </div>
     <div class="form-group">
       <label>Estado</label>
-      <select id="edit-activo">
-        <option value="true" ${t.activo ? 'selected' : ''}>Activo</option>
-        <option value="false" ${!t.activo ? 'selected' : ''}>Inactivo</option>
+      <select id="t-activo">
+        <option value="true" ${t?.activo !== false ? 'selected' : ''}>Activo</option>
+        <option value="false" ${t?.activo === false ? 'selected' : ''}>Inactivo</option>
       </select>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveTemplate(${id})">Guardar</button>
+      ${t ? `<button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">Eliminar</button>` : ''}
+      <button class="btn btn-primary" onclick="saveTemplate(${t?.id || 'null'})">${t ? 'Guardar' : 'Crear'}</button>
     </div>
-  `);
+  `;
+}
+
+async function editTemplate(id) {
+  await loadProductos();
+  const t = templatesData.find(x => x.id === id);
+  openModal('Editar Template', templateForm(t));
 }
 
 async function saveTemplate(id) {
-  const texto_mensaje = document.getElementById('edit-texto').value;
-  const activo = document.getElementById('edit-activo').value === 'true';
+  const data = {
+    producto_id: document.getElementById('t-producto').value,
+    n_mensaje: parseInt(document.getElementById('t-n_mensaje').value),
+    dia_envio: parseInt(document.getElementById('t-dia_envio').value),
+    tipo_mensaje: document.getElementById('t-tipo_mensaje').value,
+    texto_mensaje: document.getElementById('t-texto').value,
+    activo: document.getElementById('t-activo').value === 'true'
+  };
   try {
-    await api(`/api/templates/${id}`, 'PUT', { texto_mensaje, activo });
+    if (id === null) {
+      await api('/api/templates', 'POST', data);
+    } else {
+      await api(`/api/templates/${id}`, 'PUT', data);
+    }
+    closeModal();
+    loadTemplates();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('¿Eliminar este template?')) return;
+  try {
+    await api(`/api/templates/${id}`, 'DELETE');
     closeModal();
     loadTemplates();
   } catch (err) {
