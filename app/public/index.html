@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="login-page" class="page">
+  <div id="login-page" class="page login-page-bg">
     <div class="login-box">
-      <img src="logo.png" alt="Vitamarket" class="logo" onerror="this.style.display='none'">
+      <img src="logo.png" alt="Vitamarket" class="login-logo">
       <h1>Seguimiento Clientes</h1>
-      <p class="subtitle">Vitamarket</p>
+      <p class="subtitle">Portal de Vendedoras</p>
       <form id="login-form">
         <div class="form-group">
           <label>Celular (WhatsApp)</label>
@@ -24,12 +24,16 @@
         <button type="submit" class="btn btn-primary btn-full">Ingresar</button>
         <p id="login-error" class="error-msg"></p>
       </form>
+      <p class="dev-credit">Desarrollado por Vitamarket &copy; 2026</p>
     </div>
   </div>
 
   <div id="app-page" class="page hidden">
     <nav class="navbar">
-      <div class="nav-brand">Vitamarket Seguimiento</div>
+      <div class="nav-brand">
+        <img src="logo.png" alt="Vitamarket">
+        <span>Seguimiento</span>
+      </div>
       <div class="nav-links">
         <button class="nav-btn active" data-tab="clientes">Clientes</button>
         <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
@@ -40,7 +44,6 @@
     </nav>
 
     <div class="container">
-      <!-- Tab Clientes -->
       <div id="tab-clientes" class="tab-content">
         <div class="tab-header">
           <h2>Clientes en Seguimiento</h2>
@@ -58,7 +61,6 @@
         <div id="clientes-list" class="cards-grid"></div>
       </div>
 
-      <!-- Tab Templates -->
       <div id="tab-templates" class="tab-content hidden">
         <div class="tab-header">
           <h2>Templates de Mensajes</h2>
@@ -69,7 +71,6 @@
         <div id="templates-list"></div>
       </div>
 
-      <!-- Tab Vendedoras -->
       <div id="tab-vendedoras" class="tab-content hidden">
         <div class="tab-header">
           <h2>Vendedoras</h2>
@@ -80,7 +81,6 @@
     </div>
   </div>
 
-  <!-- Modal -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
