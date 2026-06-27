@@ -42,6 +42,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     if (btn.dataset.tab === 'clientes') loadClientes();
     if (btn.dataset.tab === 'templates') loadTemplates();
     if (btn.dataset.tab === 'vendedoras') loadVendedoras();
+    if (btn.dataset.tab === 'productos') loadProductosTab();
   });
 });
 
@@ -116,6 +117,7 @@ function showApp() {
   if (userInfo.rol !== 'superadmin') {
     document.getElementById('nav-templates').style.display = 'none';
     document.getElementById('nav-vendedoras').style.display = 'none';
+    document.getElementById('nav-productos').style.display = 'none';
   }
   loadClientes();
 }
@@ -432,6 +434,91 @@ async function saveVendedora(id) {
     }
     closeModal();
     loadVendedoras();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// PRODUCTOS
+async function loadProductosTab() {
+  try {
+    productosData = await api('/api/productos');
+    renderProductos();
+  } catch (err) {
+    document.getElementById('productos-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+}
+
+function renderProductos() {
+  const container = document.getElementById('productos-list');
+  container.innerHTML = `
+    <table class="productos-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre (Seguimiento)</th>
+          <th>Nombre en Odoo (para match)</th>
+          <th>Templates</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${productosData.map(p => {
+          const count = templatesData.filter(t => t.producto_id === p.id).length;
+          return `
+          <tr>
+            <td>${p.id}</td>
+            <td><strong>${p.nombre}</strong></td>
+            <td><code class="odoo-name">${p.nombre_odoo || '<span style="color:#e74c3c">Sin mapear</span>'}</code></td>
+            <td><span class="badge badge-activo">${count} templates</span></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="editProducto(${p.id})">Editar</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+document.getElementById('nuevo-producto-btn')?.addEventListener('click', () => {
+  openModal('Nuevo Producto', productoForm(null));
+});
+
+function editProducto(id) {
+  const p = productosData.find(x => x.id === id);
+  openModal('Editar Producto', productoForm(p));
+}
+
+function productoForm(p) {
+  return `
+    <div class="form-group">
+      <label>Nombre en Seguimiento</label>
+      <input type="text" id="p-nombre" value="${p?.nombre || ''}">
+    </div>
+    <div class="form-group">
+      <label>Nombre exacto en Odoo</label>
+      <small style="color:#888;display:block;margin-bottom:6px">Debe coincidir exactamente con el campo "producto" que devuelve Odoo (se usa ILIKE, no distingue mayúsculas)</small>
+      <input type="text" id="p-odoo" value="${p?.nombre_odoo || ''}">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProducto(${p?.id || 'null'})">${p ? 'Guardar' : 'Crear'}</button>
+    </div>
+  `;
+}
+
+async function saveProducto(id) {
+  const data = {
+    nombre: document.getElementById('p-nombre').value,
+    nombre_odoo: document.getElementById('p-odoo').value
+  };
+  try {
+    if (id === null) {
+      await api('/api/productos', 'POST', data);
+    } else {
+      await api(`/api/productos/${id}`, 'PUT', data);
+    }
+    closeModal();
+    loadProductosTab();
   } catch (err) {
     alert('Error: ' + err.message);
   }

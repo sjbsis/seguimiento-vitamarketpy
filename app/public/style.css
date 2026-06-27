@@ -165,6 +165,15 @@ body {
 /* EMPTY */
 .empty-state { text-align: center; padding: 60px 20px; color: #bbb; }
 
+/* PRODUCTOS TABLE */
+.productos-table { width: 100%; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.productos-table thead { background: var(--dark); color: white; }
+.productos-table th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; }
+.productos-table td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
+.productos-table tr:last-child td { border-bottom: none; }
+.productos-table tr:hover td { background: #f8f9fa; }
+.odoo-name { background: #f0f2f5; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; color: #333; }
+
 /* VENDEDORA */
 .vendedora-card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
 .vendedora-inactive { opacity: 0.5; }

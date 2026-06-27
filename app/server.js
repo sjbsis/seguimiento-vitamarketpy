@@ -218,8 +218,28 @@ app.put('/api/mi-password', authMiddleware, async (req, res) => {
 // Productos
 app.get('/api/productos', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, nombre FROM productos ORDER BY nombre');
+    const result = await pool.query('SELECT id, nombre, nombre_odoo FROM productos ORDER BY nombre');
     res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/productos/:id', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre, nombre_odoo } = req.body;
+  try {
+    await pool.query('UPDATE productos SET nombre = $1, nombre_odoo = $2 WHERE id = $3', [nombre, nombre_odoo, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/productos', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre, nombre_odoo } = req.body;
+  try {
+    const result = await pool.query('INSERT INTO productos (nombre, nombre_odoo) VALUES ($1, $2) RETURNING id', [nombre, nombre_odoo]);
+    res.json({ id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

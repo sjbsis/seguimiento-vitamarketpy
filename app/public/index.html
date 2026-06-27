@@ -38,6 +38,7 @@
         <button class="nav-btn active" data-tab="clientes">Clientes</button>
         <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
         <button class="nav-btn" data-tab="vendedoras" id="nav-vendedoras">Vendedoras</button>
+        <button class="nav-btn" data-tab="productos" id="nav-productos">Productos</button>
         <span id="nav-user"></span>
         <button class="nav-btn" id="cambiar-password-btn">🔑 Mi contraseña</button>
         <button class="nav-btn" id="logout-btn">Salir</button>
@@ -77,6 +78,14 @@
           </div>
         </div>
         <div id="templates-list"></div>
+      </div>
+
+      <div id="tab-productos" class="tab-content hidden">
+        <div class="tab-header">
+          <h2>Mapeo de Productos</h2>
+          <button class="btn btn-primary" id="nuevo-producto-btn">+ Nuevo Producto</button>
+        </div>
+        <div id="productos-list"></div>
       </div>
 
       <div id="tab-vendedoras" class="tab-content hidden">
