@@ -4,14 +4,12 @@ let clientesData = [];
 let templatesData = [];
 let vendedorasData = [];
 
-// INIT
 if (token && userInfo) {
   showApp();
 } else {
   showLogin();
 }
 
-// LOGIN
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const celular = document.getElementById('celular').value.trim();
@@ -35,7 +33,6 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   showLogin();
 });
 
-// TABS
 document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
@@ -48,16 +45,64 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
   });
 });
 
-// FILTERS
 document.getElementById('search-cliente').addEventListener('input', renderClientes);
 document.getElementById('filter-estado').addEventListener('change', renderClientes);
 document.getElementById('filter-producto').addEventListener('change', renderTemplates);
 
-// MODAL
+document.getElementById('btn-filtrar').addEventListener('click', loadClientes);
+document.getElementById('btn-limpiar').addEventListener('click', () => {
+  document.getElementById('filter-desde').value = '';
+  document.getElementById('filter-hasta').value = '';
+  loadClientes();
+});
+
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal')) closeModal();
 });
+
+document.getElementById('cambiar-password-btn').addEventListener('click', () => {
+  openModal('Cambiar contraseña', `
+    <div class="form-group">
+      <label>Contraseña actual</label>
+      <input type="password" id="pwd-actual">
+    </div>
+    <div class="form-group">
+      <label>Nueva contraseña</label>
+      <input type="password" id="pwd-nuevo">
+    </div>
+    <div class="form-group">
+      <label>Confirmar nueva contraseña</label>
+      <input type="password" id="pwd-confirmar">
+    </div>
+    <p id="pwd-error" class="error-msg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPassword()">Guardar</button>
+    </div>
+  `);
+});
+
+async function guardarPassword() {
+  const actual = document.getElementById('pwd-actual').value;
+  const nuevo = document.getElementById('pwd-nuevo').value;
+  const confirmar = document.getElementById('pwd-confirmar').value;
+  if (nuevo !== confirmar) {
+    document.getElementById('pwd-error').textContent = 'Las contraseñas no coinciden';
+    return;
+  }
+  if (nuevo.length < 6) {
+    document.getElementById('pwd-error').textContent = 'La contraseña debe tener al menos 6 caracteres';
+    return;
+  }
+  try {
+    await api('/api/mi-password', 'PUT', { password_actual: actual, password_nuevo: nuevo });
+    closeModal();
+    alert('Contraseña actualizada correctamente');
+  } catch (err) {
+    document.getElementById('pwd-error').textContent = err.message;
+  }
+}
 
 function showLogin() {
   document.getElementById('login-page').classList.remove('hidden');
@@ -75,7 +120,6 @@ function showApp() {
   loadClientes();
 }
 
-// API HELPER
 async function api(url, method = 'GET', body = null, auth = true) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth && token) headers['Authorization'] = 'Bearer ' + token;
@@ -85,10 +129,16 @@ async function api(url, method = 'GET', body = null, auth = true) {
   return data;
 }
 
-// CLIENTES
 async function loadClientes() {
   try {
-    clientesData = await api('/api/clientes');
+    const desde = document.getElementById('filter-desde').value;
+    const hasta = document.getElementById('filter-hasta').value;
+    let url = '/api/clientes';
+    const params = [];
+    if (desde) params.push('desde=' + desde);
+    if (hasta) params.push('hasta=' + hasta);
+    if (params.length) url += '?' + params.join('&');
+    clientesData = await api(url);
     renderClientes();
   } catch (err) {
     document.getElementById('clientes-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
@@ -99,7 +149,7 @@ function renderClientes() {
   const search = document.getElementById('search-cliente').value.toLowerCase();
   const estado = document.getElementById('filter-estado').value;
   let filtered = clientesData.filter(c => {
-    const matchSearch = c.cliente.toLowerCase().includes(search) || c.producto_nombre?.toLowerCase().includes(search);
+    const matchSearch = c.cliente.toLowerCase().includes(search) || (c.nombre_producto || '').toLowerCase().includes(search);
     const matchEstado = !estado || c.estado === estado;
     return matchSearch && matchEstado;
   });
@@ -111,13 +161,19 @@ function renderClientes() {
   }
   container.innerHTML = filtered.map(c => `
     <div class="card estado-${c.estado}">
-      <div class="card-title">${c.cliente}</div>
-      <div class="card-sub">${c.nombre_producto || c.producto_id}</div>
-      <div class="card-info">📱 ${c.telefono}</div>
-      <div class="card-info">👤 ${c.vendedora}</div>
-      <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje || 0}</div>
-      <div class="card-info" style="margin-top:6px">
-        <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
+      <div class="card-left">
+        <div class="card-title">${c.cliente}</div>
+        <div class="card-sub">${c.nombre_producto || c.producto_id}</div>
+        <div class="card-info">📱 ${c.telefono}</div>
+        <div class="card-info">👤 ${c.vendedora}</div>
+        <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje || 0}</div>
+        <div class="card-info" style="margin-top:8px">
+          <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-mensaje-label">Último mensaje enviado</div>
+        <div class="card-mensaje-texto">${c.ultimo_mensaje || 'Sin mensajes aún'}</div>
       </div>
       <div class="card-actions">
         ${c.estado !== 'recompro' ? `<button class="btn btn-success btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'recompro')">✅ Recompró</button>` : ''}
@@ -142,7 +198,6 @@ async function cambiarEstado(nro_factura, producto_id, estado) {
   }
 }
 
-// TEMPLATES
 async function loadTemplates() {
   try {
     templatesData = await api('/api/templates');
@@ -212,7 +267,6 @@ async function saveTemplate(id) {
   }
 }
 
-// VENDEDORAS
 async function loadVendedoras() {
   try {
     vendedorasData = await api('/api/vendedoras');
@@ -230,7 +284,7 @@ function renderVendedoras() {
   }
   container.innerHTML = vendedorasData.map(v => `
     <div class="vendedora-card ${!v.activa ? 'vendedora-inactive' : ''}">
-      <div class="card-title">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         ${v.nombre_visible}
         <span class="badge ${v.rol === 'superadmin' ? 'badge-recompro' : 'badge-activo'}">${v.rol}</span>
         ${!v.activa ? '<span class="badge badge-no_quiere">Inactiva</span>' : ''}
@@ -238,7 +292,7 @@ function renderVendedoras() {
       <div class="card-info">👤 Odoo: ${v.nombre_odoo}</div>
       <div class="card-info">📱 ${v.celular_wp}</div>
       <div class="card-info">🤳 Instancia: ${v.instancia_evolution || '—'}</div>
-      <div class="card-actions">
+      <div class="card-actions" style="margin-top:12px">
         <button class="btn btn-secondary btn-sm" onclick="editVendedora(${v.id})">Editar</button>
       </div>
     </div>
@@ -323,7 +377,6 @@ async function saveVendedora(id) {
   }
 }
 
-// MODAL HELPERS
 function openModal(title, body) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').innerHTML = body;

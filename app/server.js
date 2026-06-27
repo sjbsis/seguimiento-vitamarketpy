@@ -60,19 +60,24 @@ app.post('/api/login', async (req, res) => {
 
 // Clientes en seguimiento
 app.get('/api/clientes', authMiddleware, async (req, res) => {
+  const { desde, hasta } = req.query;
   try {
-    let query, params;
-    if (req.user.rol === 'superadmin') {
-      query = `SELECT cs.*,
-        (SELECT COUNT(*) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as mensajes_enviados
-        FROM clientes_seguimiento cs ORDER BY cs.updated_at DESC`;
-      params = [];
-    } else {
-      query = `SELECT cs.*,
-        (SELECT COUNT(*) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as mensajes_enviados
-        FROM clientes_seguimiento cs WHERE cs.vendedora = $1 ORDER BY cs.updated_at DESC`;
-      params = [req.user.nombre_odoo];
-    }
+    let conditions = req.user.rol === 'superadmin' ? [] : [`cs.vendedora = $1`];
+    let params = req.user.rol === 'superadmin' ? [] : [req.user.nombre_odoo];
+
+    if (desde) { params.push(desde); conditions.push(`cs.updated_at >= $${params.length}`); }
+    if (hasta) { params.push(hasta + ' 23:59:59'); conditions.push(`cs.updated_at <= $${params.length}`); }
+
+    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const query = `
+      SELECT cs.*,
+        (SELECT COUNT(*) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as mensajes_enviados,
+        (SELECT me.mensaje FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id ORDER BY me.n_mensaje DESC LIMIT 1) as ultimo_mensaje
+      FROM clientes_seguimiento cs
+      ${where}
+      ORDER BY cs.updated_at DESC`;
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
@@ -166,6 +171,22 @@ app.put('/api/vendedoras/:id', authMiddleware, adminOnly, async (req, res) => {
         [nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, rol, req.params.id]
       );
     }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Cambiar contraseña propia
+app.put('/api/mi-password', authMiddleware, async (req, res) => {
+  const { password_actual, password_nuevo } = req.body;
+  try {
+    const result = await pool.query('SELECT password_hash FROM vendedoras WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(password_actual, user.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+    const hash = await bcrypt.hash(password_nuevo, 10);
+    await pool.query('UPDATE vendedoras SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

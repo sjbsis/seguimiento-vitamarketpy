@@ -39,6 +39,7 @@
         <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
         <button class="nav-btn" data-tab="vendedoras" id="nav-vendedoras">Vendedoras</button>
         <span id="nav-user"></span>
+        <button class="nav-btn" id="cambiar-password-btn">🔑 Mi contraseña</button>
         <button class="nav-btn" id="logout-btn">Salir</button>
       </div>
     </nav>
@@ -56,6 +57,10 @@
               <option value="no_quiere">No quiere más</option>
               <option value="suspendido">Suspendido</option>
             </select>
+            <input type="date" id="filter-desde" class="filter-input" title="Desde">
+            <input type="date" id="filter-hasta" class="filter-input" title="Hasta">
+            <button class="btn btn-primary btn-sm" id="btn-filtrar">Filtrar</button>
+            <button class="btn btn-secondary btn-sm" id="btn-limpiar">Limpiar</button>
           </div>
         </div>
         <div id="clientes-list" class="cards-grid"></div>
