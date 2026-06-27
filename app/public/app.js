@@ -440,37 +440,44 @@ async function saveVendedora(id) {
 }
 
 // PRODUCTOS
+let productosOdooData = [];
+
 async function loadProductosTab() {
   try {
-    productosData = await api('/api/productos');
-    renderProductos();
+    [productosData, productosOdooData] = await Promise.all([
+      api('/api/productos'),
+      api('/api/productos-odoo')
+    ]);
+    renderProductosSistema();
+    renderProductosOdoo();
   } catch (err) {
     document.getElementById('productos-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
 }
 
-function renderProductos() {
+function renderProductosSistema() {
   const container = document.getElementById('productos-list');
   container.innerHTML = `
     <table class="productos-table">
       <thead>
         <tr>
           <th>ID</th>
-          <th>Nombre (Seguimiento)</th>
-          <th>Nombre en Odoo (para match)</th>
+          <th>Nombre en el Sistema</th>
+          <th>Nombres Odoo mapeados</th>
           <th>Templates</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         ${productosData.map(p => {
-          const count = templatesData.filter(t => t.producto_id === p.id).length;
+          const countTemplates = templatesData.filter(t => t.producto_id === p.id).length;
+          const countOdoo = productosOdooData.filter(po => po.producto_id === p.id).length;
           return `
           <tr>
-            <td>${p.id}</td>
+            <td style="color:#888;font-size:12px">${p.id}</td>
             <td><strong>${p.nombre}</strong></td>
-            <td><code class="odoo-name">${p.nombre_odoo || '<span style="color:#e74c3c">Sin mapear</span>'}</code></td>
-            <td><span class="badge badge-activo">${count} templates</span></td>
+            <td><span class="badge ${countOdoo ? 'badge-activo' : 'badge-no_quiere'}">${countOdoo} nombre${countOdoo !== 1 ? 's' : ''} Odoo</span></td>
+            <td><span class="badge badge-activo">${countTemplates} template${countTemplates !== 1 ? 's' : ''}</span></td>
             <td><button class="btn btn-secondary btn-sm" onclick="editProducto(${p.id})">Editar</button></td>
           </tr>`;
         }).join('')}
@@ -479,8 +486,42 @@ function renderProductos() {
   `;
 }
 
+function renderProductosOdoo() {
+  const container = document.getElementById('productos-odoo-list');
+  if (!productosOdooData.length) {
+    container.innerHTML = '<div class="empty-state"><p>No hay nombres de Odoo cargados</p></div>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="productos-table">
+      <thead>
+        <tr>
+          <th>Nombre exacto en Odoo</th>
+          <th>Producto del Sistema</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${productosOdooData.map(po => `
+          <tr>
+            <td><code class="odoo-name">${po.nombre_odoo}</code></td>
+            <td><strong>${po.producto_nombre}</strong></td>
+            <td><span class="badge ${po.activo ? 'badge-activo' : 'badge-suspendido'}">${po.activo ? 'Activo' : 'Inactivo'}</span></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="editProductoOdoo(${po.id})">Editar</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
 document.getElementById('nuevo-producto-btn')?.addEventListener('click', () => {
-  openModal('Nuevo Producto', productoForm(null));
+  openModal('Nuevo Producto del Sistema', productoForm(null));
+});
+
+document.getElementById('nuevo-odoo-btn')?.addEventListener('click', async () => {
+  if (!productosData.length) productosData = await api('/api/productos');
+  openModal('Agregar Nombre de Odoo', productoOdooForm(null));
 });
 
 function editProducto(id) {
@@ -488,16 +529,16 @@ function editProducto(id) {
   openModal('Editar Producto', productoForm(p));
 }
 
+function editProductoOdoo(id) {
+  const po = productosOdooData.find(x => x.id === id);
+  openModal('Editar Nombre Odoo', productoOdooForm(po));
+}
+
 function productoForm(p) {
   return `
     <div class="form-group">
-      <label>Nombre en Seguimiento</label>
+      <label>Nombre en el Sistema</label>
       <input type="text" id="p-nombre" value="${p?.nombre || ''}">
-    </div>
-    <div class="form-group">
-      <label>Nombre exacto en Odoo</label>
-      <small style="color:#888;display:block;margin-bottom:6px">Debe coincidir exactamente con el campo "producto" que devuelve Odoo (se usa ILIKE, no distingue mayúsculas)</small>
-      <input type="text" id="p-odoo" value="${p?.nombre_odoo || ''}">
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -506,17 +547,74 @@ function productoForm(p) {
   `;
 }
 
+function productoOdooForm(po) {
+  const opts = productosData.map(p =>
+    `<option value="${p.id}" ${po?.producto_id == p.id ? 'selected' : ''}>${p.nombre}</option>`
+  ).join('');
+  return `
+    <div class="form-group">
+      <label>Nombre exacto en Odoo</label>
+      <small style="color:#888;display:block;margin-bottom:6px">Copiá el texto exacto tal como viene de Odoo (distingue mayúsculas/minúsculas no, pero sí espacios y guiones)</small>
+      <input type="text" id="po-nombre" value="${po?.nombre_odoo || ''}" placeholder="Ej: CREATINE EN POLVO - VITAMARKET">
+    </div>
+    <div class="form-group">
+      <label>Producto del Sistema</label>
+      <select id="po-producto">${opts}</select>
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="po-activo">
+        <option value="true" ${po?.activo !== false ? 'selected' : ''}>Activo</option>
+        <option value="false" ${po?.activo === false ? 'selected' : ''}>Inactivo</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      ${po ? `<button class="btn btn-danger btn-sm" onclick="deleteProductoOdoo(${po.id})">Eliminar</button>` : ''}
+      <button class="btn btn-primary" onclick="saveProductoOdoo(${po?.id || 'null'})">${po ? 'Guardar' : 'Agregar'}</button>
+    </div>
+  `;
+}
+
 async function saveProducto(id) {
-  const data = {
-    nombre: document.getElementById('p-nombre').value,
-    nombre_odoo: document.getElementById('p-odoo').value
-  };
+  const data = { nombre: document.getElementById('p-nombre').value };
   try {
     if (id === null) {
       await api('/api/productos', 'POST', data);
     } else {
       await api(`/api/productos/${id}`, 'PUT', data);
     }
+    closeModal();
+    loadProductosTab();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function saveProductoOdoo(id) {
+  const data = {
+    nombre_odoo: document.getElementById('po-nombre').value,
+    producto_id: parseInt(document.getElementById('po-producto').value),
+    activo: document.getElementById('po-activo').value === 'true'
+  };
+  if (!data.nombre_odoo.trim()) { alert('El nombre de Odoo no puede estar vacío'); return; }
+  try {
+    if (id === null) {
+      await api('/api/productos-odoo', 'POST', data);
+    } else {
+      await api(`/api/productos-odoo/${id}`, 'PUT', data);
+    }
+    closeModal();
+    loadProductosTab();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteProductoOdoo(id) {
+  if (!confirm('¿Eliminar este nombre de Odoo?')) return;
+  try {
+    await api(`/api/productos-odoo/${id}`, 'DELETE');
     closeModal();
     loadProductosTab();
   } catch (err) {

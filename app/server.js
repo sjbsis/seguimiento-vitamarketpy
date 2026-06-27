@@ -226,9 +226,9 @@ app.get('/api/productos', authMiddleware, async (req, res) => {
 });
 
 app.put('/api/productos/:id', authMiddleware, adminOnly, async (req, res) => {
-  const { nombre, nombre_odoo } = req.body;
+  const { nombre } = req.body;
   try {
-    await pool.query('UPDATE productos SET nombre = $1, nombre_odoo = $2 WHERE id = $3', [nombre, nombre_odoo, req.params.id]);
+    await pool.query('UPDATE productos SET nombre = $1 WHERE id = $2', [nombre, req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -236,10 +236,60 @@ app.put('/api/productos/:id', authMiddleware, adminOnly, async (req, res) => {
 });
 
 app.post('/api/productos', authMiddleware, adminOnly, async (req, res) => {
-  const { nombre, nombre_odoo } = req.body;
+  const { nombre } = req.body;
   try {
-    const result = await pool.query('INSERT INTO productos (nombre, nombre_odoo) VALUES ($1, $2) RETURNING id', [nombre, nombre_odoo]);
+    const result = await pool.query('INSERT INTO productos (nombre) VALUES ($1) RETURNING id', [nombre]);
     res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Productos Odoo (mapeo)
+app.get('/api/productos-odoo', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT po.id, po.nombre_odoo, po.activo, po.producto_id, p.nombre as producto_nombre
+      FROM productos_odoo po
+      JOIN productos p ON p.id = po.producto_id
+      ORDER BY p.nombre, po.nombre_odoo
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/productos-odoo', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, producto_id } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO productos_odoo (nombre_odoo, producto_id) VALUES ($1, $2) RETURNING id',
+      [nombre_odoo.trim(), producto_id]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/productos-odoo/:id', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, producto_id, activo } = req.body;
+  try {
+    await pool.query(
+      'UPDATE productos_odoo SET nombre_odoo = $1, producto_id = $2, activo = $3 WHERE id = $4',
+      [nombre_odoo.trim(), producto_id, activo, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/productos-odoo/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM productos_odoo WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

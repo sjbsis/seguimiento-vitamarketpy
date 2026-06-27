@@ -82,10 +82,17 @@
 
       <div id="tab-productos" class="tab-content hidden">
         <div class="tab-header">
-          <h2>Mapeo de Productos</h2>
+          <h2>Productos del Sistema</h2>
           <button class="btn btn-primary" id="nuevo-producto-btn">+ Nuevo Producto</button>
         </div>
         <div id="productos-list"></div>
+
+        <div class="tab-header" style="margin-top:36px">
+          <h2>Nombres en Odoo</h2>
+          <button class="btn btn-purple" id="nuevo-odoo-btn">+ Agregar Nombre Odoo</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:12px">Cada nombre de Odoo apunta a un producto del sistema. El workflow busca el nombre exacto en esta tabla.</p>
+        <div id="productos-odoo-list"></div>
       </div>
 
       <div id="tab-vendedoras" class="tab-content hidden">
