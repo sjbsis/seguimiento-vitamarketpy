@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguimiento Clientes - Vitamarket</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login-page" class="page">
+    <div class="login-box">
+      <img src="logo.png" alt="Vitamarket" class="logo" onerror="this.style.display='none'">
+      <h1>Seguimiento Clientes</h1>
+      <p class="subtitle">Vitamarket</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Celular (WhatsApp)</label>
+          <input type="text" id="celular" placeholder="595981234567" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Ingresar</button>
+        <p id="login-error" class="error-msg"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-page" class="page hidden">
+    <nav class="navbar">
+      <div class="nav-brand">Vitamarket Seguimiento</div>
+      <div class="nav-links">
+        <button class="nav-btn active" data-tab="clientes">Clientes</button>
+        <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
+        <button class="nav-btn" data-tab="vendedoras" id="nav-vendedoras">Vendedoras</button>
+        <span id="nav-user"></span>
+        <button class="nav-btn" id="logout-btn">Salir</button>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Tab Clientes -->
+      <div id="tab-clientes" class="tab-content">
+        <div class="tab-header">
+          <h2>Clientes en Seguimiento</h2>
+          <div class="filters">
+            <input type="text" id="search-cliente" placeholder="Buscar cliente..." class="filter-input">
+            <select id="filter-estado" class="filter-input">
+              <option value="">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="recompro">Recompró</option>
+              <option value="no_quiere">No quiere más</option>
+              <option value="suspendido">Suspendido</option>
+            </select>
+          </div>
+        </div>
+        <div id="clientes-list" class="cards-grid"></div>
+      </div>
+
+      <!-- Tab Templates -->
+      <div id="tab-templates" class="tab-content hidden">
+        <div class="tab-header">
+          <h2>Templates de Mensajes</h2>
+          <select id="filter-producto" class="filter-input">
+            <option value="">Todos los productos</option>
+          </select>
+        </div>
+        <div id="templates-list"></div>
+      </div>
+
+      <!-- Tab Vendedoras -->
+      <div id="tab-vendedoras" class="tab-content hidden">
+        <div class="tab-header">
+          <h2>Vendedoras</h2>
+          <button class="btn btn-primary" id="nueva-vendedora-btn">+ Nueva Vendedora</button>
+        </div>
+        <div id="vendedoras-list" class="cards-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
