@@ -127,12 +127,31 @@ function showApp() {
   loadClientes();
 }
 
+function traducirError(msg) {
+  if (!msg) return 'Ocurrió un error.';
+  const m = msg.toLowerCase();
+  if (m.includes('duplicate key') || m.includes('unique constraint')) return 'Ese registro ya existe (valor duplicado).';
+  if (m.includes('foreign key')) return 'No se puede completar: el registro está en uso por otros datos.';
+  if (m.includes('null value') || m.includes('not-null')) return 'Faltan campos obligatorios.';
+  if (m.includes('invalid input syntax')) return 'Hay un dato con formato inválido.';
+  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('load failed')) return 'Error de conexión con el servidor.';
+  if (m.includes('no autorizado') || m.includes('token')) return 'Sesión expirada. Volvé a iniciar sesión.';
+  if (m.includes('credenciales')) return 'Credenciales incorrectas.';
+  if (m.includes('solo superadmin')) return 'Solo un administrador puede hacer esta acción.';
+  return msg; // ya viene en español desde el backend
+}
+
 async function api(url, method = 'GET', body = null, auth = true) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth && token) headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error');
+  let res, data;
+  try {
+    res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
+    data = await res.json();
+  } catch {
+    throw new Error('Error de conexión con el servidor.');
+  }
+  if (!res.ok) throw new Error(traducirError(data.error));
   return data;
 }
 
@@ -237,19 +256,36 @@ async function marcarRevendedora(cliente) {
 
 function formatFecha(f) {
   if (!f) return '—';
-  // Si ya viene como dd/mm/yyyy (texto de Odoo), mostrarlo tal cual
-  if (typeof f === 'string' && f.includes('/')) return f;
+  if (typeof f === 'string') {
+    if (f.includes('/')) return f; // ya viene dd/mm/yyyy (texto de Odoo)
+    const m = f.match(/^(\d{4})-(\d{2})-(\d{2})/); // ISO o YYYY-MM-DD → sin desfase de zona horaria
+    if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  }
   const d = new Date(f);
-  if (isNaN(d)) return f;
+  if (isNaN(d)) return typeof f === 'string' ? f : '—';
   return d.toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function sumarDias(fechaBase, dias) {
   if (!fechaBase || dias === null || dias === undefined) return null;
-  const d = new Date(fechaBase);
-  if (isNaN(d)) return null;
-  d.setDate(d.getDate() + Number(dias));
-  return d;
+  let y, mo, da;
+  if (typeof fechaBase === 'string') {
+    const m = fechaBase.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) { y = +m[1]; mo = +m[2]; da = +m[3]; }
+  }
+  let base;
+  if (y) {
+    base = new Date(Date.UTC(y, mo - 1, da));
+  } else {
+    const tmp = new Date(fechaBase);
+    if (isNaN(tmp)) return null;
+    base = new Date(Date.UTC(tmp.getFullYear(), tmp.getMonth(), tmp.getDate()));
+  }
+  base.setUTCDate(base.getUTCDate() + Number(dias));
+  const yy = base.getUTCFullYear();
+  const mm = String(base.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(base.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`; // formatFecha lo convierte a dd/mm/yyyy
 }
 
 function estadoLabel(estado) {
