@@ -201,6 +201,8 @@ function renderClientes() {
         <div class="card-info">🧾 Factura: ${c.nro_factura}</div>
         <div class="card-info">📅 Compra: ${formatFecha(c.fecha_factura)}</div>
         <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje_real ?? c.ultimo_n_mensaje ?? 0}</div>
+        <div class="card-info">📤 Último envío: ${c.ultimo_envio ? formatFecha(c.ultimo_envio) : '—'}</div>
+        <div class="card-info">⏭️ Próximo envío: ${c.proximo_dia_envio != null ? formatFecha(sumarDias(c.fecha_factura, c.proximo_dia_envio)) : 'Sin pendientes'}</div>
         <div class="card-info" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
           <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}</span>
@@ -238,6 +240,14 @@ function formatFecha(f) {
   const d = new Date(f);
   if (isNaN(d)) return f;
   return d.toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function sumarDias(fechaBase, dias) {
+  if (!fechaBase || dias === null || dias === undefined) return null;
+  const d = new Date(fechaBase);
+  if (isNaN(d)) return null;
+  d.setDate(d.getDate() + Number(dias));
+  return d;
 }
 
 function estadoLabel(estado) {
