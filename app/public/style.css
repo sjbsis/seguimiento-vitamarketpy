@@ -162,6 +162,21 @@ body {
 #modal-body input:focus, #modal-body select:focus { outline: none; border-color: var(--teal); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
+/* FILTRO CHECKBOX */
+.filter-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #555; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 10px; padding: 8px 12px; }
+.filter-check input { cursor: pointer; }
+
+/* SEMAFORO */
+.sem-badge { display: inline-flex; align-items: center; gap: 4px; }
+.card.sem-rojo { border-left-color: #e74c3c; }
+.card.sem-amarillo { border-left-color: #f1c40f; }
+.card.sem-verde { border-left-color: #2ecc71; }
+.card.sem-gris { border-left-color: #bbb; }
+.sem-badge.sem-rojo { background: #fdecea; color: #c0392b; }
+.sem-badge.sem-amarillo { background: #fef9e7; color: #b7950b; }
+.sem-badge.sem-verde { background: #d5f5e3; color: #1e8449; }
+.sem-badge.sem-gris { background: #f2f3f4; color: #7f8c8d; }
+
 /* EMPTY */
 .empty-state { text-align: center; padding: 60px 20px; color: #bbb; }
 

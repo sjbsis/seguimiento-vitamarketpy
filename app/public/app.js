@@ -49,6 +49,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
 
 document.getElementById('search-cliente').addEventListener('input', renderClientes);
 document.getElementById('filter-estado').addEventListener('change', renderClientes);
+document.getElementById('filter-con-mensajes').addEventListener('change', renderClientes);
 document.getElementById('filter-producto').addEventListener('change', renderTemplates);
 
 document.getElementById('btn-filtrar').addEventListener('click', loadClientes);
@@ -149,13 +150,37 @@ async function loadClientes() {
   }
 }
 
+function diasParaProximo(c) {
+  if (c.proximo_dia_envio === null || c.proximo_dia_envio === undefined) return null;
+  if (c.dias_transcurridos === null || c.dias_transcurridos === undefined) return null;
+  return c.proximo_dia_envio - c.dias_transcurridos;
+}
+
+function semaforo(dias) {
+  if (dias === null) return { clase: 'sem-gris', icono: '⚪', texto: 'Sin mensajes pendientes' };
+  if (dias <= 1) return { clase: 'sem-rojo', icono: '🔴', texto: dias <= 0 ? 'Le toca hoy' : 'Le toca mañana' };
+  if (dias <= 3) return { clase: 'sem-amarillo', icono: '🟡', texto: `Faltan ${dias} días` };
+  return { clase: 'sem-verde', icono: '🟢', texto: `Faltan ${dias} días` };
+}
+
 function renderClientes() {
   const search = document.getElementById('search-cliente').value.toLowerCase();
   const estado = document.getElementById('filter-estado').value;
+  const soloConMensajes = document.getElementById('filter-con-mensajes')?.checked;
   let filtered = clientesData.filter(c => {
     const matchSearch = c.cliente.toLowerCase().includes(search) || (c.nombre_producto || '').toLowerCase().includes(search);
     const matchEstado = !estado || c.estado === estado;
-    return matchSearch && matchEstado;
+    const matchMensajes = !soloConMensajes || (c.mensajes_enviados || 0) > 0;
+    return matchSearch && matchEstado && matchMensajes;
+  });
+
+  // Ordenar por proximidad del próximo mensaje (los que menos faltan primero; los sin pendientes al final)
+  filtered.sort((a, b) => {
+    const da = diasParaProximo(a), db = diasParaProximo(b);
+    if (da === null && db === null) return 0;
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
   });
 
   const container = document.getElementById('clientes-list');
@@ -163,8 +188,11 @@ function renderClientes() {
     container.innerHTML = '<div class="empty-state"><p>No hay clientes que mostrar</p></div>';
     return;
   }
-  container.innerHTML = filtered.map(c => `
-    <div class="card estado-${c.estado}">
+  container.innerHTML = filtered.map(c => {
+    const dias = diasParaProximo(c);
+    const sem = semaforo(dias);
+    return `
+    <div class="card estado-${c.estado} ${sem.clase}">
       <div class="card-left">
         <div class="card-title">${c.cliente}</div>
         <div class="card-sub">${c.nombre_producto || c.producto_id}</div>
@@ -173,8 +201,9 @@ function renderClientes() {
         <div class="card-info">🧾 Factura: ${c.nro_factura}</div>
         <div class="card-info">📅 Compra: ${formatFecha(c.fecha_factura)}</div>
         <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje || 0}</div>
-        <div class="card-info" style="margin-top:8px">
+        <div class="card-info" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
+          <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}</span>
         </div>
       </div>
       <div class="card-right">
@@ -185,9 +214,21 @@ function renderClientes() {
         ${c.estado !== 'recompro' ? `<button class="btn btn-success btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'recompro')">✅ Recompró</button>` : ''}
         ${c.estado !== 'no_quiere' ? `<button class="btn btn-danger btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'no_quiere')">🚫 No quiere más</button>` : ''}
         ${c.estado !== 'activo' ? `<button class="btn btn-secondary btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'activo')">↩ Reactivar</button>` : ''}
+        ${userInfo.rol === 'superadmin' ? `<button class="btn btn-purple btn-sm" onclick="marcarRevendedora('${c.cliente.replace(/'/g, "\\'")}')">🔁 Es revendedora</button>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+}
+
+async function marcarRevendedora(cliente) {
+  if (!confirm(`¿Marcar a "${cliente}" como revendedora? Dejará de recibir mensajes y se quitará del seguimiento.`)) return;
+  try {
+    await api('/api/revendedoras/desde-cliente', 'POST', { cliente });
+    await loadClientes();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
 
 function formatFecha(f) {

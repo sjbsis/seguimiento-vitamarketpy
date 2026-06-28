@@ -73,7 +73,15 @@ app.get('/api/clientes', authMiddleware, async (req, res) => {
     const query = `
       SELECT cs.*,
         (SELECT COUNT(*) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as mensajes_enviados,
-        (SELECT me.mensaje FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id ORDER BY me.n_mensaje DESC LIMIT 1) as ultimo_mensaje
+        (SELECT me.mensaje FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id ORDER BY me.n_mensaje DESC LIMIT 1) as ultimo_mensaje,
+        CASE WHEN cs.fecha_factura IS NOT NULL THEN (CURRENT_DATE - cs.fecha_factura) END as dias_transcurridos,
+        (SELECT MIN(mt.dia_envio) FROM mensajes_templates mt
+           WHERE mt.producto_id = cs.producto_id
+           AND mt.n_mensaje > 1
+           AND mt.activo = true
+           AND cs.fecha_factura IS NOT NULL
+           AND mt.dia_envio > (CURRENT_DATE - cs.fecha_factura)
+        ) as proximo_dia_envio
       FROM clientes_seguimiento cs
       ${where}
       ORDER BY cs.updated_at DESC`;
@@ -378,6 +386,31 @@ app.put('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) => 
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Marcar un cliente del seguimiento como revendedora (la agrega y la saca del seguimiento)
+app.post('/api/revendedoras/desde-cliente', authMiddleware, adminOnly, async (req, res) => {
+  const { cliente } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      'INSERT INTO revendedoras (nombre_odoo) VALUES ($1) ON CONFLICT (nombre_odoo) DO NOTHING',
+      [cliente.trim()]
+    );
+    await client.query(
+      `DELETE FROM mensajes_enviados WHERE seguimiento_id IN (SELECT id FROM clientes_seguimiento WHERE cliente = $1)`,
+      [cliente]
+    );
+    await client.query('DELETE FROM clientes_seguimiento WHERE cliente = $1', [cliente]);
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 });
 
