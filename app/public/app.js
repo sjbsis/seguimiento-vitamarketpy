@@ -340,10 +340,16 @@ async function deleteTemplate(id) {
   }
 }
 
+let vendedoresOdooData = [];
+
 async function loadVendedoras() {
   try {
-    vendedorasData = await api('/api/vendedoras');
+    [vendedorasData, vendedoresOdooData] = await Promise.all([
+      api('/api/vendedoras'),
+      api('/api/vendedores-odoo')
+    ]);
     renderVendedoras();
+    renderVendedoresOdoo();
   } catch (err) {
     document.getElementById('vendedoras-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -355,21 +361,122 @@ function renderVendedoras() {
     container.innerHTML = '<div class="empty-state"><p>No hay vendedoras</p></div>';
     return;
   }
-  container.innerHTML = vendedorasData.map(v => `
+  container.innerHTML = vendedorasData.map(v => {
+    const countOdoo = vendedoresOdooData.filter(vo => vo.vendedora_id === v.id).length;
+    return `
     <div class="vendedora-card ${!v.activa ? 'vendedora-inactive' : ''}">
       <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         ${v.nombre_visible}
         <span class="badge ${v.rol === 'superadmin' ? 'badge-recompro' : 'badge-activo'}">${v.rol}</span>
         ${!v.activa ? '<span class="badge badge-no_quiere">Inactiva</span>' : ''}
       </div>
-      <div class="card-info">👤 Odoo: ${v.nombre_odoo}</div>
       <div class="card-info">📱 ${v.celular_wp}</div>
       <div class="card-info">🤳 Instancia: ${v.instancia_evolution || '—'}</div>
+      <div class="card-info">🔗 ${countOdoo} nombre${countOdoo !== 1 ? 's' : ''} de Odoo asignado${countOdoo !== 1 ? 's' : ''}</div>
       <div class="card-actions" style="margin-top:12px">
         <button class="btn btn-secondary btn-sm" onclick="editVendedora(${v.id})">Editar</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+}
+
+function renderVendedoresOdoo() {
+  const container = document.getElementById('vendedores-odoo-list');
+  if (!vendedoresOdooData.length) {
+    container.innerHTML = '<div class="empty-state"><p>No hay nombres de Odoo cargados</p></div>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="productos-table">
+      <thead>
+        <tr>
+          <th>Nombre del vendedor en Odoo</th>
+          <th>Vendedora real (recibe el mensaje)</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vendedoresOdooData.map(vo => `
+          <tr>
+            <td><code class="odoo-name">${vo.nombre_odoo}</code></td>
+            <td><strong>${vo.nombre_visible}</strong></td>
+            <td><span class="badge ${vo.activo ? 'badge-activo' : 'badge-suspendido'}">${vo.activo ? 'Activo' : 'Inactivo'}</span></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="editVendedorOdoo(${vo.id})">Editar</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+document.getElementById('nuevo-vendedor-odoo-btn')?.addEventListener('click', () => {
+  openModal('Agregar Nombre de Odoo', vendedorOdooForm(null));
+});
+
+function editVendedorOdoo(id) {
+  const vo = vendedoresOdooData.find(x => x.id === id);
+  openModal('Editar Nombre Odoo', vendedorOdooForm(vo));
+}
+
+function vendedorOdooForm(vo) {
+  const opts = vendedorasData.map(v =>
+    `<option value="${v.id}" ${vo?.vendedora_id == v.id ? 'selected' : ''}>${v.nombre_visible}</option>`
+  ).join('');
+  return `
+    <div class="form-group">
+      <label>Nombre exacto del vendedor en Odoo</label>
+      <small style="color:#888;display:block;margin-bottom:6px">Tal como aparece en el campo "vendedor" de la factura (ej: Administrator)</small>
+      <input type="text" id="vo-nombre" value="${vo?.nombre_odoo || ''}" placeholder="Ej: Administrator">
+    </div>
+    <div class="form-group">
+      <label>Vendedora real que recibe el mensaje</label>
+      <select id="vo-vendedora">${opts}</select>
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="vo-activo">
+        <option value="true" ${vo?.activo !== false ? 'selected' : ''}>Activo</option>
+        <option value="false" ${vo?.activo === false ? 'selected' : ''}>Inactivo</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      ${vo ? `<button class="btn btn-danger btn-sm" onclick="deleteVendedorOdoo(${vo.id})">Eliminar</button>` : ''}
+      <button class="btn btn-primary" onclick="saveVendedorOdoo(${vo?.id || 'null'})">${vo ? 'Guardar' : 'Agregar'}</button>
+    </div>
+  `;
+}
+
+async function saveVendedorOdoo(id) {
+  const data = {
+    nombre_odoo: document.getElementById('vo-nombre').value,
+    vendedora_id: parseInt(document.getElementById('vo-vendedora').value),
+    activo: document.getElementById('vo-activo').value === 'true'
+  };
+  if (!data.nombre_odoo.trim()) { alert('El nombre de Odoo no puede estar vacío'); return; }
+  try {
+    if (id === null) {
+      await api('/api/vendedores-odoo', 'POST', data);
+    } else {
+      await api(`/api/vendedores-odoo/${id}`, 'PUT', data);
+    }
+    closeModal();
+    loadVendedoras();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteVendedorOdoo(id) {
+  if (!confirm('¿Eliminar este nombre de Odoo?')) return;
+  try {
+    await api(`/api/vendedores-odoo/${id}`, 'DELETE');
+    closeModal();
+    loadVendedoras();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
 
 document.getElementById('nueva-vendedora-btn').addEventListener('click', () => {
@@ -386,10 +493,6 @@ function vendedoraForm(v) {
     <div class="form-group">
       <label>Nombre visible</label>
       <input type="text" id="v-nombre" value="${v?.nombre_visible || ''}">
-    </div>
-    <div class="form-group">
-      <label>Nombre en Odoo</label>
-      <input type="text" id="v-odoo" value="${v?.nombre_odoo || ''}">
     </div>
     <div class="form-group">
       <label>Celular WhatsApp (para login)</label>
@@ -428,7 +531,6 @@ function vendedoraForm(v) {
 async function saveVendedora(id) {
   const data = {
     nombre_visible: document.getElementById('v-nombre').value,
-    nombre_odoo: document.getElementById('v-odoo').value,
     celular_wp: document.getElementById('v-celular').value,
     instancia_evolution: document.getElementById('v-instancia').value,
     rol: document.getElementById('v-rol').value,

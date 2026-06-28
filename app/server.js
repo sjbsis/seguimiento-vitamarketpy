@@ -48,7 +48,7 @@ app.post('/api/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Credenciales incorrectas' });
     const token = jwt.sign(
-      { id: user.id, nombre: user.nombre_visible, rol: user.rol, nombre_odoo: user.nombre_odoo },
+      { id: user.id, nombre: user.nombre_visible, rol: user.rol },
       JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -62,8 +62,8 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/clientes', authMiddleware, async (req, res) => {
   const { desde, hasta } = req.query;
   try {
-    let conditions = req.user.rol === 'superadmin' ? [] : [`cs.vendedora = $1`];
-    let params = req.user.rol === 'superadmin' ? [] : [req.user.nombre_odoo];
+    let conditions = req.user.rol === 'superadmin' ? [] : [`cs.vendedora IN (SELECT nombre_odoo FROM vendedores_odoo WHERE vendedora_id = $1)`];
+    let params = req.user.rol === 'superadmin' ? [] : [req.user.id];
 
     if (desde) { params.push(desde); conditions.push(`cs.updated_at >= $${params.length}`); }
     if (hasta) { params.push(hasta + ' 23:59:59'); conditions.push(`cs.updated_at <= $${params.length}`); }
@@ -156,7 +156,7 @@ app.delete('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => 
 app.get('/api/vendedoras', authMiddleware, adminOnly, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, rol FROM vendedoras ORDER BY nombre_visible'
+      'SELECT id, nombre_visible, instancia_evolution, celular_wp, activa, rol FROM vendedoras ORDER BY nombre_visible'
     );
     res.json(result.rows);
   } catch (err) {
@@ -165,12 +165,12 @@ app.get('/api/vendedoras', authMiddleware, adminOnly, async (req, res) => {
 });
 
 app.post('/api/vendedoras', authMiddleware, adminOnly, async (req, res) => {
-  const { nombre_visible, nombre_odoo, instancia_evolution, celular_wp, password, rol } = req.body;
+  const { nombre_visible, instancia_evolution, celular_wp, password, rol } = req.body;
   try {
     const hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'INSERT INTO vendedoras (nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, password_hash, rol) VALUES ($1,$2,$3,$4,true,$5,$6) RETURNING id',
-      [nombre_visible, nombre_odoo, instancia_evolution, celular_wp, hash, rol || 'vendedora']
+      'INSERT INTO vendedoras (nombre_visible, instancia_evolution, celular_wp, activa, password_hash, rol) VALUES ($1,$2,$3,true,$4,$5) RETURNING id',
+      [nombre_visible, instancia_evolution, celular_wp, hash, rol || 'vendedora']
     );
     res.json({ id: result.rows[0].id });
   } catch (err) {
@@ -179,20 +179,70 @@ app.post('/api/vendedoras', authMiddleware, adminOnly, async (req, res) => {
 });
 
 app.put('/api/vendedoras/:id', authMiddleware, adminOnly, async (req, res) => {
-  const { nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, password, rol } = req.body;
+  const { nombre_visible, instancia_evolution, celular_wp, activa, password, rol } = req.body;
   try {
     if (password) {
       const hash = await bcrypt.hash(password, 10);
       await pool.query(
-        'UPDATE vendedoras SET nombre_visible=$1, nombre_odoo=$2, instancia_evolution=$3, celular_wp=$4, activa=$5, password_hash=$6, rol=$7 WHERE id=$8',
-        [nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, hash, rol, req.params.id]
+        'UPDATE vendedoras SET nombre_visible=$1, instancia_evolution=$2, celular_wp=$3, activa=$4, password_hash=$5, rol=$6 WHERE id=$7',
+        [nombre_visible, instancia_evolution, celular_wp, activa, hash, rol, req.params.id]
       );
     } else {
       await pool.query(
-        'UPDATE vendedoras SET nombre_visible=$1, nombre_odoo=$2, instancia_evolution=$3, celular_wp=$4, activa=$5, rol=$6 WHERE id=$7',
-        [nombre_visible, nombre_odoo, instancia_evolution, celular_wp, activa, rol, req.params.id]
+        'UPDATE vendedoras SET nombre_visible=$1, instancia_evolution=$2, celular_wp=$3, activa=$4, rol=$5 WHERE id=$6',
+        [nombre_visible, instancia_evolution, celular_wp, activa, rol, req.params.id]
       );
     }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Vendedores Odoo (mapeo)
+app.get('/api/vendedores-odoo', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT vo.id, vo.nombre_odoo, vo.activo, vo.vendedora_id, v.nombre_visible
+      FROM vendedores_odoo vo
+      JOIN vendedoras v ON v.id = vo.vendedora_id
+      ORDER BY v.nombre_visible, vo.nombre_odoo
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/vendedores-odoo', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, vendedora_id } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO vendedores_odoo (nombre_odoo, vendedora_id) VALUES ($1, $2) RETURNING id',
+      [nombre_odoo.trim(), vendedora_id]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/vendedores-odoo/:id', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, vendedora_id, activo } = req.body;
+  try {
+    await pool.query(
+      'UPDATE vendedores_odoo SET nombre_odoo = $1, vendedora_id = $2, activo = $3 WHERE id = $4',
+      [nombre_odoo.trim(), vendedora_id, activo, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/vendedores-odoo/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM vendedores_odoo WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
