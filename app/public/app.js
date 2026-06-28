@@ -350,7 +350,7 @@ async function loadTiposMensaje(force) {
 
 document.getElementById('nuevo-template-btn')?.addEventListener('click', async () => {
   await loadProductos();
-  await loadTiposMensaje();
+  await loadTiposMensaje(true);
   openModal('Nuevo Template', templateForm(null));
 });
 
@@ -398,7 +398,7 @@ function templateForm(t) {
 
 async function editTemplate(id) {
   await loadProductos();
-  await loadTiposMensaje();
+  await loadTiposMensaje(true);
   const t = templatesData.find(x => x.id === id);
   openModal('Editar Template', templateForm(t));
 }
