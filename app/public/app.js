@@ -168,6 +168,8 @@ function renderClientes() {
         <div class="card-sub">${c.nombre_producto || c.producto_id}</div>
         <div class="card-info">📱 ${c.telefono}</div>
         <div class="card-info">👤 ${c.vendedora}</div>
+        <div class="card-info">🧾 Factura: ${c.nro_factura}</div>
+        <div class="card-info">📅 Compra: ${formatFecha(c.fecha_factura)}</div>
         <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje || 0}</div>
         <div class="card-info" style="margin-top:8px">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
@@ -184,6 +186,15 @@ function renderClientes() {
       </div>
     </div>
   `).join('');
+}
+
+function formatFecha(f) {
+  if (!f) return '—';
+  // Si ya viene como dd/mm/yyyy (texto de Odoo), mostrarlo tal cual
+  if (typeof f === 'string' && f.includes('/')) return f;
+  const d = new Date(f);
+  if (isNaN(d)) return f;
+  return d.toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function estadoLabel(estado) {
