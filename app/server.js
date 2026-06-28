@@ -425,4 +425,32 @@ app.delete('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) 
   }
 });
 
+// Configuracion (variables de mensajes)
+app.get('/api/config', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT clave, valor, descripcion FROM config ORDER BY clave');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/config', authMiddleware, adminOnly, async (req, res) => {
+  const valores = req.body; // { clave: valor, ... }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const [clave, valor] of Object.entries(valores)) {
+      await client.query('UPDATE config SET valor = $1 WHERE clave = $2', [valor, clave]);
+    }
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 app.listen(process.env.PORT || 3000, () => console.log('Servidor corriendo en puerto 3000'));

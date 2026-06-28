@@ -181,6 +181,14 @@ body {
 .sem-badge.sem-verde { background: #d5f5e3; color: #1e8449; }
 .sem-badge.sem-gris { background: #f2f3f4; color: #7f8c8d; }
 
+/* CONFIG */
+.config-row { background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: center; }
+.config-label { display: flex; flex-direction: column; gap: 4px; }
+.config-label code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-size: 13px; color: var(--teal); font-weight: 700; width: fit-content; }
+.config-label small { color: #888; font-size: 12px; }
+.config-input { width: 100%; }
+@media (max-width: 600px) { .config-row { grid-template-columns: 1fr; } }
+
 /* EMPTY */
 .empty-state { text-align: center; padding: 60px 20px; color: #bbb; }
 

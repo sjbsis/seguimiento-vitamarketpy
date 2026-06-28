@@ -44,6 +44,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     if (btn.dataset.tab === 'vendedoras') loadVendedoras();
     if (btn.dataset.tab === 'productos') loadProductosTab();
     if (btn.dataset.tab === 'revendedoras') loadRevendedorasTab();
+    if (btn.dataset.tab === 'config') loadConfig();
   });
 });
 
@@ -120,6 +121,7 @@ function showApp() {
     document.getElementById('nav-templates').style.display = 'none';
     document.getElementById('nav-vendedoras').style.display = 'none';
     document.getElementById('nav-productos').style.display = 'none';
+    document.getElementById('nav-config').style.display = 'none';
     document.getElementById('nav-revendedoras').style.display = 'none';
   }
   loadClientes();
@@ -894,6 +896,47 @@ async function deleteRevendedora(id) {
     alert('Error: ' + err.message);
   }
 }
+
+// CONFIGURACION
+let configData = [];
+
+async function loadConfig() {
+  try {
+    configData = await api('/api/config');
+    renderConfig();
+  } catch (err) {
+    document.getElementById('config-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+}
+
+function renderConfig() {
+  const container = document.getElementById('config-list');
+  container.innerHTML = configData.map(c => `
+    <div class="config-row">
+      <label class="config-label">
+        <code>[${c.clave === 'x_dias' ? 'X días' : c.clave === 'codigo' ? 'código' : c.clave}]</code>
+        <small>${c.descripcion || ''}</small>
+      </label>
+      <input type="text" class="filter-input config-input" data-clave="${c.clave}" value="${(c.valor || '').replace(/"/g, '&quot;')}">
+    </div>
+  `).join('');
+}
+
+async function guardarConfig() {
+  const valores = {};
+  document.querySelectorAll('.config-input').forEach(inp => {
+    valores[inp.dataset.clave] = inp.value;
+  });
+  try {
+    await api('/api/config', 'PUT', valores);
+    alert('Configuración guardada');
+    loadConfig();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+document.getElementById('guardar-config-btn')?.addEventListener('click', guardarConfig);
 
 function openModal(title, body) {
   document.getElementById('modal-title').textContent = title;

@@ -39,6 +39,7 @@
         <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
         <button class="nav-btn" data-tab="vendedoras" id="nav-vendedoras">Vendedoras</button>
         <button class="nav-btn" data-tab="productos" id="nav-productos">Productos</button>
+        <button class="nav-btn" data-tab="config" id="nav-config">Configuración</button>
         <button class="nav-btn" data-tab="revendedoras" id="nav-revendedoras">Revendedoras</button>
         <span id="nav-user"></span>
         <button class="nav-btn" id="cambiar-password-btn">🔑 Mi contraseña</button>
@@ -104,6 +105,15 @@
         </div>
         <p style="font-size:13px;color:#888;margin-bottom:12px">Estos clientes compran para revender, así que el flujo NO les envía mensajes de seguimiento. El match es por nombre exacto del cliente (como viene de Odoo).</p>
         <div id="revendedoras-list"></div>
+      </div>
+
+      <div id="tab-config" class="tab-content hidden">
+        <div class="tab-header">
+          <h2>Configuración de Mensajes</h2>
+          <button class="btn btn-primary" id="guardar-config-btn">Guardar cambios</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:12px">Estos valores reemplazan las variables que aparecen en los templates (ej: <code>[descuento]</code>, <code>[link]</code>).</p>
+        <div id="config-list"></div>
       </div>
 
       <div id="tab-vendedoras" class="tab-content hidden">
