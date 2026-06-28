@@ -345,4 +345,49 @@ app.delete('/api/productos-odoo/:id', authMiddleware, adminOnly, async (req, res
   }
 });
 
+// Revendedoras (NO reciben mensajes de seguimiento)
+app.get('/api/revendedoras', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, nombre_odoo, numerotelefono, activo FROM revendedoras ORDER BY nombre_odoo');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/revendedoras', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, numerotelefono } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO revendedoras (nombre_odoo, numerotelefono) VALUES ($1, $2) RETURNING id',
+      [nombre_odoo.trim(), numerotelefono || null]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre_odoo, numerotelefono, activo } = req.body;
+  try {
+    await pool.query(
+      'UPDATE revendedoras SET nombre_odoo = $1, numerotelefono = $2, activo = $3 WHERE id = $4',
+      [nombre_odoo.trim(), numerotelefono || null, activo, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM revendedoras WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(process.env.PORT || 3000, () => console.log('Servidor corriendo en puerto 3000'));

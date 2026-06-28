@@ -43,6 +43,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     if (btn.dataset.tab === 'templates') loadTemplates();
     if (btn.dataset.tab === 'vendedoras') loadVendedoras();
     if (btn.dataset.tab === 'productos') loadProductosTab();
+    if (btn.dataset.tab === 'revendedoras') loadRevendedorasTab();
   });
 });
 
@@ -118,6 +119,7 @@ function showApp() {
     document.getElementById('nav-templates').style.display = 'none';
     document.getElementById('nav-vendedoras').style.display = 'none';
     document.getElementById('nav-productos').style.display = 'none';
+    document.getElementById('nav-revendedoras').style.display = 'none';
   }
   loadClientes();
 }
@@ -730,6 +732,113 @@ async function deleteProductoOdoo(id) {
     await api(`/api/productos-odoo/${id}`, 'DELETE');
     closeModal();
     loadProductosTab();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// REVENDEDORAS
+let revendedorasData = [];
+
+async function loadRevendedorasTab() {
+  try {
+    revendedorasData = await api('/api/revendedoras');
+    renderRevendedoras();
+  } catch (err) {
+    document.getElementById('revendedoras-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+}
+
+function renderRevendedoras() {
+  const container = document.getElementById('revendedoras-list');
+  if (!revendedorasData.length) {
+    container.innerHTML = '<div class="empty-state"><p>No hay revendedoras cargadas</p></div>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="productos-table">
+      <thead>
+        <tr>
+          <th>Nombre del cliente (Odoo)</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${revendedorasData.map(r => `
+          <tr>
+            <td><strong>${r.nombre_odoo}</strong></td>
+            <td>${r.numerotelefono || '—'}</td>
+            <td><span class="badge ${r.activo ? 'badge-no_quiere' : 'badge-suspendido'}">${r.activo ? 'Excluida' : 'Inactiva'}</span></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="editRevendedora(${r.id})">Editar</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+document.getElementById('nueva-revendedora-btn')?.addEventListener('click', () => {
+  openModal('Nueva Revendedora', revendedoraForm(null));
+});
+
+function editRevendedora(id) {
+  const r = revendedorasData.find(x => x.id === id);
+  openModal('Editar Revendedora', revendedoraForm(r));
+}
+
+function revendedoraForm(r) {
+  return `
+    <div class="form-group">
+      <label>Nombre exacto del cliente en Odoo</label>
+      <small style="color:#888;display:block;margin-bottom:6px">Debe coincidir exactamente con el nombre del cliente como viene de Odoo</small>
+      <input type="text" id="r-nombre" value="${r?.nombre_odoo || ''}" placeholder="Ej: ADA GONZALEZ">
+    </div>
+    <div class="form-group">
+      <label>Teléfono (opcional)</label>
+      <input type="text" id="r-telefono" value="${r?.numerotelefono || ''}">
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="r-activo">
+        <option value="true" ${r?.activo !== false ? 'selected' : ''}>Excluida (no recibe mensajes)</option>
+        <option value="false" ${r?.activo === false ? 'selected' : ''}>Inactiva (sí recibe mensajes)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      ${r ? `<button class="btn btn-danger btn-sm" onclick="deleteRevendedora(${r.id})">Eliminar</button>` : ''}
+      <button class="btn btn-primary" onclick="saveRevendedora(${r?.id || 'null'})">${r ? 'Guardar' : 'Crear'}</button>
+    </div>
+  `;
+}
+
+async function saveRevendedora(id) {
+  const data = {
+    nombre_odoo: document.getElementById('r-nombre').value,
+    numerotelefono: document.getElementById('r-telefono').value,
+    activo: document.getElementById('r-activo').value === 'true'
+  };
+  if (!data.nombre_odoo.trim()) { alert('El nombre no puede estar vacío'); return; }
+  try {
+    if (id === null) {
+      await api('/api/revendedoras', 'POST', data);
+    } else {
+      await api(`/api/revendedoras/${id}`, 'PUT', data);
+    }
+    closeModal();
+    loadRevendedorasTab();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteRevendedora(id) {
+  if (!confirm('¿Eliminar esta revendedora? Volverá a recibir mensajes de seguimiento.')) return;
+  try {
+    await api(`/api/revendedoras/${id}`, 'DELETE');
+    closeModal();
+    loadRevendedorasTab();
   } catch (err) {
     alert('Error: ' + err.message);
   }

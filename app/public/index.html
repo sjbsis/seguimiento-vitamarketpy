@@ -39,6 +39,7 @@
         <button class="nav-btn" data-tab="templates" id="nav-templates">Templates</button>
         <button class="nav-btn" data-tab="vendedoras" id="nav-vendedoras">Vendedoras</button>
         <button class="nav-btn" data-tab="productos" id="nav-productos">Productos</button>
+        <button class="nav-btn" data-tab="revendedoras" id="nav-revendedoras">Revendedoras</button>
         <span id="nav-user"></span>
         <button class="nav-btn" id="cambiar-password-btn">🔑 Mi contraseña</button>
         <button class="nav-btn" id="logout-btn">Salir</button>
@@ -93,6 +94,15 @@
         </div>
         <p style="font-size:13px;color:#888;margin-bottom:12px">Cada nombre de Odoo apunta a un producto del sistema. El workflow busca el nombre exacto en esta tabla.</p>
         <div id="productos-odoo-list"></div>
+      </div>
+
+      <div id="tab-revendedoras" class="tab-content hidden">
+        <div class="tab-header">
+          <h2>Revendedoras (no reciben mensajes)</h2>
+          <button class="btn btn-primary" id="nueva-revendedora-btn">+ Nueva Revendedora</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:12px">Estos clientes compran para revender, así que el flujo NO les envía mensajes de seguimiento. El match es por nombre exacto del cliente (como viene de Odoo).</p>
+        <div id="revendedoras-list"></div>
       </div>
 
       <div id="tab-vendedoras" class="tab-content hidden">
