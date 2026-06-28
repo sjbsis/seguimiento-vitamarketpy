@@ -74,6 +74,7 @@ app.get('/api/clientes', authMiddleware, async (req, res) => {
       SELECT cs.*,
         (SELECT COUNT(*) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as mensajes_enviados,
         (SELECT me.mensaje FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id ORDER BY me.n_mensaje DESC LIMIT 1) as ultimo_mensaje,
+        (SELECT COALESCE(MAX(me.n_mensaje), 0) FROM mensajes_enviados me WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id) as ultimo_n_mensaje_real,
         CASE WHEN cs.fecha_factura IS NOT NULL THEN (CURRENT_DATE - cs.fecha_factura) END as dias_transcurridos,
         (SELECT MIN(mt.dia_envio) FROM mensajes_templates mt
            WHERE mt.producto_id = cs.producto_id

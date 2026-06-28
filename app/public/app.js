@@ -200,7 +200,7 @@ function renderClientes() {
         <div class="card-info">👤 ${c.vendedora}</div>
         <div class="card-info">🧾 Factura: ${c.nro_factura}</div>
         <div class="card-info">📅 Compra: ${formatFecha(c.fecha_factura)}</div>
-        <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje || 0}</div>
+        <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje_real ?? c.ultimo_n_mensaje ?? 0}</div>
         <div class="card-info" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
           <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}</span>
