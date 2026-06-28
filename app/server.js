@@ -425,6 +425,35 @@ app.delete('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) 
   }
 });
 
+// Tipos de mensaje (catálogo)
+app.get('/api/tipos-mensaje', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, nombre, activo FROM tipos_mensaje ORDER BY nombre');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/tipos-mensaje', authMiddleware, adminOnly, async (req, res) => {
+  const { nombre } = req.body;
+  try {
+    const result = await pool.query('INSERT INTO tipos_mensaje (nombre) VALUES ($1) RETURNING id', [nombre.trim()]);
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/tipos-mensaje/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM tipos_mensaje WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Configuracion (variables de mensajes)
 app.get('/api/config', authMiddleware, async (req, res) => {
   try {

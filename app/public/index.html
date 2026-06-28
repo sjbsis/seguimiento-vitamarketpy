@@ -116,6 +116,16 @@
         </div>
         <p style="font-size:13px;color:#888;margin-bottom:12px">Estos valores reemplazan las variables que aparecen en los templates (ej: <code>[descuento]</code>, <code>[link]</code>).</p>
         <div id="config-list"></div>
+
+        <div class="tab-header" style="margin-top:36px">
+          <h2>Tipos de Mensaje</h2>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:12px">Son las categorías que aparecen en el desplegable "Tipo de mensaje" al crear o editar un template.</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="nuevo-tipo-input" class="filter-input" placeholder="Ej: Check_in" style="flex:1;min-width:200px">
+          <button class="btn btn-primary" id="agregar-tipo-btn">+ Agregar tipo</button>
+        </div>
+        <div id="tipos-mensaje-list"></div>
       </div>
 
       <div id="tab-vendedoras" class="tab-content hidden">

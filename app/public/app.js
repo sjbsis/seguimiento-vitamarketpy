@@ -342,8 +342,15 @@ async function loadProductos() {
   productosData = await api('/api/productos');
 }
 
+let tiposMensajeData = [];
+async function loadTiposMensaje(force) {
+  if (tiposMensajeData.length && !force) return;
+  tiposMensajeData = await api('/api/tipos-mensaje');
+}
+
 document.getElementById('nuevo-template-btn')?.addEventListener('click', async () => {
   await loadProductos();
+  await loadTiposMensaje();
   openModal('Nuevo Template', templateForm(null));
 });
 
@@ -367,10 +374,7 @@ function templateForm(t) {
     <div class="form-group">
       <label>Tipo de mensaje</label>
       <select id="t-tipo_mensaje">
-        <option value="Bienvenida" ${t?.tipo_mensaje === 'Bienvenida' ? 'selected' : ''}>Bienvenida</option>
-        <option value="Seguimiento" ${t?.tipo_mensaje === 'Seguimiento' ? 'selected' : ''}>Seguimiento</option>
-        <option value="Recompra" ${t?.tipo_mensaje === 'Recompra' ? 'selected' : ''}>Recompra</option>
-        <option value="Reactivacion" ${t?.tipo_mensaje === 'Reactivacion' ? 'selected' : ''}>Reactivación</option>
+        ${tiposMensajeData.map(tm => `<option value="${tm.nombre}" ${t?.tipo_mensaje === tm.nombre ? 'selected' : ''}>${tm.nombre}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
@@ -394,6 +398,7 @@ function templateForm(t) {
 
 async function editTemplate(id) {
   await loadProductos();
+  await loadTiposMensaje();
   const t = templatesData.find(x => x.id === id);
   openModal('Editar Template', templateForm(t));
 }
@@ -940,10 +945,60 @@ async function loadConfig() {
   try {
     configData = await api('/api/config');
     renderConfig();
+    await loadTiposMensaje(true);
+    renderTiposMensaje();
   } catch (err) {
     document.getElementById('config-list').innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
 }
+
+function renderTiposMensaje() {
+  const container = document.getElementById('tipos-mensaje-list');
+  if (!container) return;
+  if (!tiposMensajeData.length) {
+    container.innerHTML = '<div class="empty-state"><p>No hay tipos de mensaje cargados</p></div>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="productos-table">
+      <thead><tr><th>Tipo de mensaje</th><th></th></tr></thead>
+      <tbody>
+        ${tiposMensajeData.map(tm => `
+          <tr>
+            <td><strong>${tm.nombre}</strong></td>
+            <td><button class="btn btn-danger btn-sm" onclick="eliminarTipoMensaje(${tm.id}, '${tm.nombre.replace(/'/g, "\\'")}')">Eliminar</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function agregarTipoMensaje() {
+  const input = document.getElementById('nuevo-tipo-input');
+  const nombre = input.value.trim();
+  if (!nombre) { alert('Escribí un nombre para el tipo de mensaje'); return; }
+  try {
+    await api('/api/tipos-mensaje', 'POST', { nombre });
+    input.value = '';
+    await loadTiposMensaje(true);
+    renderTiposMensaje();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function eliminarTipoMensaje(id, nombre) {
+  if (!confirm(`¿Eliminar el tipo "${nombre}"? Los templates que ya lo usan no se modifican.`)) return;
+  try {
+    await api(`/api/tipos-mensaje/${id}`, 'DELETE');
+    await loadTiposMensaje(true);
+    renderTiposMensaje();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+document.getElementById('agregar-tipo-btn')?.addEventListener('click', agregarTipoMensaje);
 
 function renderConfig() {
   const container = document.getElementById('config-list');
