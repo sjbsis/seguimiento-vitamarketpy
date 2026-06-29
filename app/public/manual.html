@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario — Seguimiento Clientes Vitamarket</title>
+  <style>
+    :root {
+      --teal: #30a5ae;
+      --mint: #6fc7ad;
+      --purple: #9a5fe2;
+      --dark: #0f1414;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: var(--dark);
+      line-height: 1.7;
+    }
+    .cover {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a2a2a 100%);
+      color: white;
+      text-align: center;
+      padding: 80px 40px;
+      page-break-after: always;
+    }
+    .cover img { width: 160px; margin-bottom: 32px; }
+    .cover h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .cover .sub { color: var(--teal); font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 40px; }
+    .cover .version { color: #aaa; font-size: 13px; margin-top: 40px; }
+
+    .wrapper { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* TOC */
+    .toc { background: white; border-radius: 16px; padding: 32px; margin-bottom: 40px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+    .toc h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--teal); }
+    .toc ol { padding-left: 24px; }
+    .toc li { margin-bottom: 6px; font-size: 15px; }
+    .toc a { color: var(--dark); text-decoration: none; }
+    .toc a:hover { color: var(--teal); }
+    .toc .sub-item { margin-left: 20px; font-size: 13px; color: #666; }
+
+    /* SECTIONS */
+    .section { background: white; border-radius: 16px; padding: 36px; margin-bottom: 28px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+    .section-role-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .badge-admin { background: rgba(154,95,226,0.12); color: var(--purple); }
+    .badge-vendedora { background: rgba(48,165,174,0.12); color: var(--teal); }
+    .badge-ambos { background: rgba(111,199,173,0.15); color: #1a7a60; }
+
+    h2.section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--dark);
+    }
+    .section-desc { font-size: 14px; color: #777; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+
+    h3 { font-size: 16px; font-weight: 700; margin: 24px 0 10px; color: var(--dark); }
+    h3:first-of-type { margin-top: 0; }
+    p { font-size: 14px; color: #444; margin-bottom: 12px; }
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { font-size: 14px; color: #444; margin-bottom: 6px; }
+    strong { color: var(--dark); }
+
+    /* STEPS */
+    .steps { counter-reset: step; padding: 0; list-style: none; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--teal), var(--mint));
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* CALLOUTS */
+    .callout {
+      border-left: 4px solid var(--teal);
+      background: rgba(48,165,174,0.06);
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    .callout.warning {
+      border-left-color: #f1c40f;
+      background: rgba(241,196,15,0.08);
+    }
+    .callout.danger {
+      border-left-color: #e74c3c;
+      background: rgba(231,76,60,0.06);
+    }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* SEMAFORO LEGEND */
+    .sem-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+    .sem-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .sem-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .sem-dot.rojo { background: #e74c3c; }
+    .sem-dot.amarillo { background: #f1c40f; }
+    .sem-dot.verde { background: #2ecc71; }
+    .sem-dot.gris { background: #bbb; }
+    .sem-dot.teal { background: var(--teal); }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    thead { background: var(--dark); color: white; }
+    th { padding: 12px 14px; text-align: left; font-weight: 600; }
+    td { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; color: #444; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8f9fa; }
+
+    /* SCREEN MOCKUP */
+    .mockup-bar {
+      background: var(--dark);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px 10px 0 0;
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-content {
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      padding: 16px;
+      background: #f8f9fa;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #444;
+    }
+
+    code {
+      background: #f0f2f5;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 12px;
+      color: var(--teal);
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .role-divider {
+      text-align: center;
+      margin: 50px 0 36px;
+      position: relative;
+    }
+    .role-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 1px;
+      background: #e0e0e0;
+    }
+    .role-divider span {
+      position: relative;
+      background: #f0f2f5;
+      padding: 0 20px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #999;
+    }
+
+    @media print {
+      body { background: white; }
+      .cover { page-break-after: always; }
+      .section { box-shadow: none; border: 1px solid #eee; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+  <img src="logo.png" alt="Vitamarket">
+  <h1>Manual de Usuario</h1>
+  <p class="sub">Sistema de Seguimiento de Clientes</p>
+  <p style="color:#aaa;font-size:15px;max-width:480px;margin:0 auto">
+    Guía completa para administradores y vendedoras del sistema de mensajería automática por WhatsApp.
+  </p>
+  <p class="version">Versión 1.0 — Junio 2026</p>
+</div>
+
+<div class="wrapper">
+
+  <!-- ÍNDICE -->
+  <div class="toc">
+    <h2>Índice de contenidos</h2>
+    <ol>
+      <li><a href="#intro">¿Qué es este sistema?</a></li>
+      <li><a href="#login">Cómo ingresar al sistema</a></li>
+      <li><a href="#clientes">Pestaña Clientes</a>
+        <div class="sub-item">Semáforo de mensajes · Filtros · Estados · Revendedoras</div>
+      </li>
+      <li><a href="#templates">Pestaña Templates</a>
+        <div class="sub-item">Crear · Editar · Variables disponibles</div>
+      </li>
+      <li><a href="#revendedoras">Pestaña Revendedoras</a></li>
+      <li><a href="#vendedoras">Pestaña Vendedoras <span style="color:var(--purple)">(Solo Admin)</span></a></li>
+      <li><a href="#productos">Pestaña Productos <span style="color:var(--purple)">(Solo Admin)</span></a></li>
+      <li><a href="#config">Pestaña Configuración <span style="color:var(--purple)">(Solo Admin)</span></a></li>
+      <li><a href="#flujo">¿Cómo funciona el flujo automático?</a></li>
+      <li><a href="#faq">Preguntas frecuentes</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. INTRODUCCIÓN -->
+  <div class="section" id="intro">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">¿Qué es este sistema?</h2>
+    <p class="section-desc">Una plataforma web para gestionar el seguimiento automático de clientes por WhatsApp.</p>
+
+    <p>El sistema de seguimiento de Vitamarket envía mensajes automáticos por WhatsApp a los clientes que compraron productos, con el objetivo de acompañarlos durante su experiencia y detectar oportunidades de recompra.</p>
+
+    <h3>¿Cómo funciona en general?</h3>
+    <p>Cuando un cliente realiza una compra en Odoo, el sistema:</p>
+    <ol class="steps">
+      <li>Detecta la compra automáticamente desde Odoo</li>
+      <li>Registra al cliente en la base de datos de seguimiento</li>
+      <li>Envía el <strong>Mensaje 1 (Bienvenida)</strong> el mismo día de la compra</li>
+      <li>Envía los <strong>Mensajes 2 al 5</strong> en los días configurados (ej: día 7, día 15, día 21, día 30)</li>
+      <li>Los mensajes se personalizan con el nombre del cliente, producto, vendedora, descuentos y links</li>
+    </ol>
+
+    <div class="callout">
+      <strong>Importante</strong>
+      El sistema funciona en automático — no hace falta hacer nada para que los mensajes salgan. Esta plataforma sirve para <em>monitorear</em> el seguimiento y <em>gestionar</em> los templates y datos de soporte.
+    </div>
+
+    <h3>Roles del sistema</h3>
+    <table>
+      <thead><tr><th>Rol</th><th>Acceso</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Administrador (superadmin)</strong></td>
+          <td>Acceso completo: Clientes, Templates, Revendedoras, Vendedoras, Productos y Configuración</td>
+        </tr>
+        <tr>
+          <td><strong>Vendedora</strong></td>
+          <td>Clientes, Templates (crear/editar) y Revendedoras (solo lectura)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2. LOGIN -->
+  <div class="section" id="login">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">Cómo ingresar al sistema</h2>
+    <p class="section-desc">Acceso con número de celular y contraseña personal.</p>
+
+    <ol class="steps">
+      <li>Abrir el navegador e ingresar la dirección del sistema (el admin les comparte el link)</li>
+      <li>En el campo <strong>Celular (WhatsApp)</strong>, escribir el número completo con código de país, sin espacios ni guiones.<br><span style="font-size:13px;color:#888">Ejemplo: <code>595981234567</code></span></li>
+      <li>Ingresar la contraseña personal</li>
+      <li>Hacer clic en <strong>Ingresar</strong></li>
+    </ol>
+
+    <div class="callout warning">
+      <strong>¿Olvidaste tu contraseña?</strong>
+      Contactar al administrador del sistema para que la restablezca. El botón <strong>🔑 Mi contraseña</strong> en la barra superior permite cambiarla una vez ingresado.
+    </div>
+
+    <h3>Cambiar la contraseña</h3>
+    <ol class="steps">
+      <li>Hacer clic en el botón <strong>🔑 Mi contraseña</strong> en la barra de navegación</li>
+      <li>Completar los campos: contraseña actual, nueva contraseña y confirmación</li>
+      <li>Hacer clic en <strong>Guardar</strong></li>
+    </ol>
+  </div>
+
+  <!-- 3. CLIENTES -->
+  <div class="section" id="clientes">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">Pestaña: Clientes</h2>
+    <p class="section-desc">Vista principal del seguimiento. Muestra todos los clientes activos con su estado de mensajería.</p>
+
+    <h3>¿Qué información muestra cada tarjeta?</h3>
+    <p>Cada cliente aparece en una tarjeta con dos columnas:</p>
+    <ul>
+      <li><strong>Izquierda:</strong> nombre, producto, vendedora, fecha de factura, número de factura, teléfono, estado del cliente</li>
+      <li><strong>Derecha:</strong> último mensaje enviado (texto completo) y semáforo del próximo mensaje</li>
+    </ul>
+
+    <h3>El semáforo de mensajes</h3>
+    <p>El semáforo indica cuándo se enviará el próximo mensaje automático:</p>
+    <div class="sem-legend">
+      <div class="sem-item"><span class="sem-dot teal"></span> Se envía HOY</div>
+      <div class="sem-item"><span class="sem-dot verde"></span> Faltan 1–3 días</div>
+      <div class="sem-item"><span class="sem-dot amarillo"></span> Faltan 4–7 días</div>
+      <div class="sem-item"><span class="sem-dot rojo"></span> Faltan más de 7 días</div>
+      <div class="sem-item"><span class="sem-dot gris"></span> Sin próximo mensaje</div>
+    </div>
+    <div class="callout">
+      El semáforo en <strong>color teal</strong> con el texto <em>"Se envía HOY"</em> indica que el flujo automático enviará un mensaje ese día (siempre que haya un template configurado para ese día).
+    </div>
+
+    <h3>Banner de hoy</h3>
+    <p>Si hay clientes que reciben mensaje hoy, aparece un banner celeste en la parte superior de la lista indicando cuántos son. También podés usar el filtro <strong>📨 Solo los de hoy</strong> para ver únicamente esos clientes.</p>
+
+    <h3>Filtros disponibles</h3>
+    <table>
+      <thead><tr><th>Filtro</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Buscar cliente</strong></td><td>Filtrar por nombre del cliente</td></tr>
+        <tr><td><strong>Estado</strong></td><td>Activo, Recompró, No quiere más, Suspendido</td></tr>
+        <tr><td><strong>Desde / Hasta</strong></td><td>Filtrar por fecha de factura (compra)</td></tr>
+        <tr><td><strong>📨 Solo los de hoy</strong></td><td>Muestra solo los que reciben mensaje hoy</td></tr>
+        <tr><td><strong>Solo con mensajes enviados</strong></td><td>Oculta clientes que aún no recibieron ningún mensaje</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Estados del cliente</h3>
+    <table>
+      <thead><tr><th>Estado</th><th>Significado</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Activo</strong></td><td>Cliente en seguimiento, recibirá mensajes normalmente</td></tr>
+        <tr><td><strong>Recompró</strong></td><td>Compró de nuevo — los mensajes se detienen automáticamente</td></tr>
+        <tr><td><strong>No quiere más</strong></td><td>Solicitó que no le envíen más mensajes — seguimiento detenido</td></tr>
+        <tr><td><strong>Suspendido</strong></td><td>Pausado temporalmente por alguna razón especial</td></tr>
+      </tbody>
+    </table>
+    <p>El estado se puede cambiar desde los botones que aparecen en la parte inferior de cada tarjeta.</p>
+
+    <h3>Marcar como revendedora</h3>
+    <p>El botón <strong>🔁 Es revendedora</strong> (visible para todos los roles) mueve al cliente a la lista de revendedoras. Los clientes marcados como revendedoras <strong>no reciben mensajes</strong> de seguimiento.</p>
+
+    <div class="callout warning">
+      <strong>Cuidado al marcar como revendedora</strong>
+      Esta acción es reversible, pero requiere que el administrador edite la lista de revendedoras manualmente. Verificar bien antes de marcar.
+    </div>
+  </div>
+
+  <!-- 4. TEMPLATES -->
+  <div class="section" id="templates">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">Pestaña: Templates</h2>
+    <p class="section-desc">Los templates son los textos de los mensajes que se envían automáticamente. Cada template corresponde a un producto, un tipo de mensaje y un día específico del seguimiento.</p>
+
+    <h3>¿Qué define un template?</h3>
+    <ul>
+      <li><strong>Producto:</strong> a qué producto aplica (ej: Colágeno, Omega 3)</li>
+      <li><strong>Tipo de mensaje:</strong> la categoría (ej: Bienvenida, Check_in, Oferta)</li>
+      <li><strong>Día de envío:</strong> en qué día del seguimiento se envía (0 = día de compra, 7 = 7 días después, etc.)</li>
+      <li><strong>Texto:</strong> el contenido del mensaje con variables reemplazables</li>
+    </ul>
+
+    <h3>Variables disponibles en los textos</h3>
+    <p>Dentro del texto del template podés usar estas variables, que se reemplazan automáticamente al enviar:</p>
+    <table>
+      <thead><tr><th>Variable</th><th>Se reemplaza por</th></tr></thead>
+      <tbody>
+        <tr><td><code>[Nombre]</code></td><td>Nombre del cliente</td></tr>
+        <tr><td><code>[tu colágeno]</code></td><td>Nombre del producto comprado</td></tr>
+        <tr><td><code>[descuento]</code></td><td>Porcentaje de descuento (configurado en Configuración)</td></tr>
+        <tr><td><code>[link]</code></td><td>Link de la tienda o producto (configurado en Configuración)</td></tr>
+        <tr><td><code>[vendedora]</code></td><td>Nombre de la vendedora asignada</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Crear un nuevo template</h3>
+    <ol class="steps">
+      <li>Hacer clic en el botón <strong>+ Nuevo Template</strong></li>
+      <li>Seleccionar el <strong>Producto</strong></li>
+      <li>Seleccionar el <strong>Tipo de mensaje</strong> (Bienvenida, Check_in, etc.)</li>
+      <li>Ingresar el <strong>Día de envío</strong> (número de días desde la compra)</li>
+      <li>Escribir el <strong>Texto</strong> del mensaje, usando variables entre corchetes si se necesita</li>
+      <li>Hacer clic en <strong>Guardar</strong></li>
+    </ol>
+
+    <div class="callout">
+      <strong>Consejo</strong>
+      El <strong>Día 0</strong> es el día de la compra (mensaje de bienvenida). El <strong>Día 7</strong> significa que el mensaje se enviará 7 días después de la compra, y así sucesivamente. El sistema no envía si no corre el flujo automático ese día, por eso es importante que el servidor esté siempre activo.
+    </div>
+
+    <h3>Editar o eliminar un template</h3>
+    <p>En cada template, los botones <strong>Editar</strong> y <strong>Eliminar</strong> permiten modificarlo o borrarlo. Confirmar antes de eliminar ya que no hay forma de recuperarlo.</p>
+
+    <h3>Filtrar templates por producto</h3>
+    <p>El selector en la parte superior filtra los templates por producto, para encontrar más fácilmente el que se quiere editar.</p>
+  </div>
+
+  <!-- 5. REVENDEDORAS -->
+  <div class="section" id="revendedoras">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">Pestaña: Revendedoras</h2>
+    <p class="section-desc">Lista de clientes que compran para revender. No reciben mensajes de seguimiento.</p>
+
+    <p>Las revendedoras son clientes que compran el producto para revenderlo, por lo tanto el flujo automático <strong>no les envía mensajes</strong>. El sistema las excluye en base al nombre exacto del cliente tal como viene de Odoo.</p>
+
+    <h3>¿Qué puede hacer cada rol?</h3>
+    <table>
+      <thead><tr><th>Acción</th><th>Administrador</th><th>Vendedora</th></tr></thead>
+      <tbody>
+        <tr><td>Ver lista de revendedoras</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Agregar nueva revendedora</td><td>✅</td><td>❌</td></tr>
+        <tr><td>Editar revendedora</td><td>✅</td><td>❌</td></tr>
+        <tr><td>Marcar cliente como revendedora desde Clientes</td><td>✅</td><td>✅</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      Las vendedoras pueden marcar un cliente como revendedora desde la pestaña <strong>Clientes</strong> usando el botón <strong>🔁 Es revendedora</strong>. Esto agrega al cliente a esta lista automáticamente.
+    </div>
+  </div>
+
+  <!-- DIVISOR ADMIN -->
+  <div class="role-divider"><span>Secciones exclusivas del Administrador</span></div>
+
+  <!-- 6. VENDEDORAS -->
+  <div class="section" id="vendedoras">
+    <span class="section-role-badge badge-admin">Solo Administrador</span>
+    <h2 class="section-title">Pestaña: Vendedoras</h2>
+    <p class="section-desc">Gestión de las cuentas de acceso al sistema y mapeo de nombres con Odoo.</p>
+
+    <h3>Gestionar vendedoras</h3>
+    <p>Desde esta pestaña se crean, editan y activan/desactivan las cuentas de acceso al sistema. Cada vendedora tiene:</p>
+    <ul>
+      <li><strong>Nombre:</strong> como aparece en los mensajes (<code>[vendedora]</code>)</li>
+      <li><strong>Celular (WhatsApp):</strong> es el nombre de usuario para el login — debe ser único</li>
+      <li><strong>Contraseña:</strong> encriptada. Si la vendedora olvidó la suya, el admin puede restablecerla aquí</li>
+      <li><strong>Activa / Inactiva:</strong> una vendedora inactiva no puede ingresar al sistema</li>
+    </ul>
+
+    <h3>Nombres en Odoo (mapeo de vendedores)</h3>
+    <p>La sección inferior <strong>"Nombres en Odoo"</strong> permite configurar cómo se mapean los nombres de usuarios de Odoo con las vendedoras reales del sistema.</p>
+
+    <div class="callout">
+      <strong>¿Por qué existe esto?</strong>
+      En Odoo, algunas facturas pueden estar asignadas a usuarios que no son vendedoras reales (ej: <em>Administrator</em>, <em>Recepción</em>). Esta tabla define qué vendedora real debe recibir esos clientes.
+    </div>
+
+    <p>Cada entrada en esta tabla tiene:</p>
+    <ul>
+      <li><strong>Nombre en Odoo:</strong> el nombre exacto del vendedor tal como aparece en Odoo</li>
+      <li><strong>Vendedora en el sistema:</strong> a qué vendedora real se asigna ese cliente</li>
+    </ul>
+  </div>
+
+  <!-- 7. PRODUCTOS -->
+  <div class="section" id="productos">
+    <span class="section-role-badge badge-admin">Solo Administrador</span>
+    <h2 class="section-title">Pestaña: Productos</h2>
+    <p class="section-desc">Gestión de productos del sistema y sus nombres en Odoo.</p>
+
+    <h3>Productos del sistema</h3>
+    <p>Son los productos que aparecen en el selector de templates y en los filtros. Cada producto tiene un nombre amigable para mostrar en la plataforma.</p>
+    <p>Para agregar un nuevo producto: hacer clic en <strong>+ Nuevo Producto</strong> e ingresar el nombre.</p>
+
+    <h3>Nombres en Odoo (mapeo de productos)</h3>
+    <p>Al igual que con las vendedoras, los nombres de productos en Odoo pueden no coincidir exactamente con los nombres en el sistema. Esta sección permite configurar ese mapeo.</p>
+
+    <div class="callout">
+      <strong>Ejemplo:</strong>
+      En Odoo el producto se llama <em>"Colágeno Hidrolizado x 1kg"</em> pero en el sistema se llama <em>"Colágeno"</em>. Se crea una entrada en esta tabla con el nombre de Odoo apuntando al producto del sistema.
+    </div>
+
+    <p>El flujo automático usa esta tabla para identificar de qué producto se trata y elegir el template correcto.</p>
+  </div>
+
+  <!-- 8. CONFIGURACIÓN -->
+  <div class="section" id="config">
+    <span class="section-role-badge badge-admin">Solo Administrador</span>
+    <h2 class="section-title">Pestaña: Configuración</h2>
+    <p class="section-desc">Variables globales del sistema y gestión de tipos de mensaje.</p>
+
+    <h3>Variables de configuración</h3>
+    <p>Son los valores que se reemplazan en los templates cuando el flujo envía mensajes. Se guardan una sola vez y aplican a todos los mensajes:</p>
+    <table>
+      <thead><tr><th>Variable</th><th>Ejemplo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>[descuento]</code></td><td>10%</td><td>Porcentaje de descuento para incluir en mensajes de oferta</td></tr>
+        <tr><td><code>[link]</code></td><td>vitamarket.com.py/tienda</td><td>Link a la tienda o producto específico</td></tr>
+      </tbody>
+    </table>
+    <p>Para actualizar estos valores: modificar los campos y hacer clic en <strong>Guardar cambios</strong>.</p>
+
+    <h3>Tipos de Mensaje</h3>
+    <p>Son las categorías que aparecen en el desplegable "Tipo de mensaje" al crear o editar un template (ej: <em>Bienvenida</em>, <em>Check_in</em>, <em>Oferta</em>, <em>Recordatorio</em>).</p>
+
+    <p>Para agregar un nuevo tipo:</p>
+    <ol class="steps">
+      <li>Escribir el nombre del tipo en el campo de texto</li>
+      <li>Hacer clic en <strong>+ Agregar tipo</strong></li>
+    </ol>
+    <p>Para eliminar un tipo, hacer clic en el botón <strong>Eliminar</strong> junto al tipo. Solo se puede eliminar si no hay templates usando ese tipo.</p>
+
+    <div class="callout warning">
+      <strong>Nomenclatura recomendada</strong>
+      Usar nombres sin espacios ni acentos para los tipos (ej: <code>Check_in</code> en lugar de <code>Check in</code>). Esto evita problemas en el flujo automático de N8N.
+    </div>
+  </div>
+
+  <!-- 9. FLUJO AUTOMÁTICO -->
+  <div class="section" id="flujo">
+    <span class="section-role-badge badge-admin">Solo Administrador</span>
+    <h2 class="section-title">¿Cómo funciona el flujo automático?</h2>
+    <p class="section-desc">Referencia técnica para administradores sobre los workflows de N8N.</p>
+
+    <p>El sistema tiene dos workflows en N8N que corren automáticamente:</p>
+
+    <h3>Workflow A — Bienvenida (corre cada 2 horas)</h3>
+    <ol class="steps">
+      <li>Consulta a Odoo las facturas de las últimas horas</li>
+      <li>Sincroniza los nuevos clientes a la base de datos local (VitaDB)</li>
+      <li>Para los clientes nuevos del día (Día 0), busca el template de Bienvenida</li>
+      <li>Envía el mensaje por WhatsApp vía Evolution API</li>
+      <li>Registra el envío en la base de datos (evita reenvíos)</li>
+    </ol>
+
+    <h3>Workflow B — Mensajes 2 al 5 (corre todos los días a las 9:00 AM)</h3>
+    <ol class="steps">
+      <li>Sincroniza todos los clientes activos desde Odoo</li>
+      <li>Lee los clientes activos de la base de datos local</li>
+      <li>Para cada cliente, calcula cuántos días pasaron desde la compra</li>
+      <li>Busca si existe un template para ese día exacto y ese producto</li>
+      <li>Si hay template, envía el mensaje y registra el envío</li>
+    </ol>
+
+    <div class="callout">
+      <strong>Matching exacto por día</strong>
+      El sistema envía únicamente en el día exacto configurado en el template. Si el workflow no corre un día (ej: servidor caído), ese mensaje se pierde — no hay recuperación retroactiva.
+    </div>
+
+    <h3>Protección anti-reenvío</h3>
+    <p>La combinación <strong>número de factura + producto + número de mensaje</strong> es única en la base de datos. Si el flujo corre dos veces el mismo día, no envía el mismo mensaje dos veces.</p>
+
+    <h3>Modo prueba</h3>
+    <p>El workflow tiene un nodo de "modo prueba" que puede redirigir todos los mensajes a un número de prueba en lugar de los clientes reales. Esto permite probar el flujo sin afectar a los clientes.</p>
+  </div>
+
+  <!-- 10. FAQ -->
+  <div class="section" id="faq">
+    <span class="section-role-badge badge-ambos">Todos los usuarios</span>
+    <h2 class="section-title">Preguntas frecuentes</h2>
+
+    <h3>¿Por qué un cliente no recibió el mensaje del día?</h3>
+    <p>Puede ser por alguna de estas razones:</p>
+    <ul>
+      <li>No existe un template configurado para ese producto y ese día</li>
+      <li>El cliente está marcado como <em>No quiere más</em>, <em>Suspendido</em> o <em>Revendedora</em></li>
+      <li>El flujo automático no corrió ese día (servidor caído)</li>
+      <li>El teléfono del cliente en Odoo está en formato incorrecto</li>
+    </ul>
+
+    <h3>¿Cómo saber si el mensaje ya fue enviado?</h3>
+    <p>En la tarjeta del cliente, la columna derecha muestra el <strong>último mensaje enviado</strong> con su texto. Si está vacío, no se ha enviado ningún mensaje aún.</p>
+
+    <h3>¿Un cliente puede recibir mensajes de más de un producto?</h3>
+    <p>Sí. Si el mismo cliente tiene múltiples facturas con diferentes productos, recibirá mensajes por cada uno de ellos de forma independiente.</p>
+
+    <h3>¿Qué pasa si cambio el texto de un template?</h3>
+    <p>El cambio aplica para los mensajes que aún no se han enviado. Los mensajes ya enviados no se modifican.</p>
+
+    <h3>¿Se puede pausar el seguimiento de un cliente específico?</h3>
+    <p>Sí. Cambiar el estado del cliente a <strong>Suspendido</strong> detiene los mensajes automáticamente.</p>
+
+    <h3>¿Qué formato debe tener el número de teléfono?</h3>
+    <p>El número debe estar completo con código de país y sin espacios, guiones ni caracteres especiales. Ejemplo: <code>595981234567</code>. El sistema limpia automáticamente los números que vengan de Odoo.</p>
+
+    <h3>¿Cuántos mensajes se pueden enviar por cliente?</h3>
+    <p>Depende de cuántos templates estén configurados para su producto. El máximo recomendado es 5 mensajes por ciclo de seguimiento (1 bienvenida + 4 mensajes de seguimiento).</p>
+
+    <h3>¿Cómo agregar una nueva vendedora al sistema?</h3>
+    <p>Solo el administrador puede hacerlo desde la pestaña <strong>Vendedoras</strong> → botón <strong>+ Nueva Vendedora</strong>. La vendedora podrá ingresar con su celular y la contraseña que se configure.</p>
+
+    <h3>¿Qué hago si el sistema no carga o muestra error?</h3>
+    <p>Intentar los siguientes pasos en orden:</p>
+    <ol class="steps">
+      <li>Recargar la página (<strong>F5</strong> o <strong>Ctrl+R</strong>)</li>
+      <li>Limpiar el caché del navegador (<strong>Ctrl+Shift+R</strong>)</li>
+      <li>Cerrar sesión y volver a ingresar</li>
+      <li>Contactar al administrador del sistema</li>
+    </ol>
+  </div>
+
+  <div style="text-align:center;margin-top:60px;padding:24px;color:#bbb;font-size:12px;">
+    Sistema de Seguimiento de Clientes — Vitamarket &copy; 2026<br>
+    Desarrollado para uso interno — No distribuir
+  </div>
+
+</div>
+</body>
+</html>
