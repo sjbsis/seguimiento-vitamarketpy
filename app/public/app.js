@@ -119,11 +119,13 @@ function showApp() {
   document.getElementById('app-page').classList.remove('hidden');
   document.getElementById('nav-user').textContent = userInfo.nombre;
   if (userInfo.rol !== 'superadmin') {
-    document.getElementById('nav-templates').style.display = 'none';
+    // La vendedora SÍ puede: clientes, templates, y VER revendedoras
     document.getElementById('nav-vendedoras').style.display = 'none';
     document.getElementById('nav-productos').style.display = 'none';
     document.getElementById('nav-config').style.display = 'none';
-    document.getElementById('nav-revendedoras').style.display = 'none';
+    // Botón de crear revendedora manual: solo admin (la vendedora solo ve la lista)
+    const btnNuevaRev = document.getElementById('nueva-revendedora-btn');
+    if (btnNuevaRev) btnNuevaRev.style.display = 'none';
   }
   loadClientes();
 }
@@ -252,7 +254,7 @@ function renderClientes() {
         ${c.estado !== 'recompro' ? `<button class="btn btn-success btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'recompro')">✅ Recompró</button>` : ''}
         ${c.estado !== 'no_quiere' ? `<button class="btn btn-danger btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'no_quiere')">🚫 No quiere más</button>` : ''}
         ${c.estado !== 'activo' ? `<button class="btn btn-secondary btn-sm" onclick="cambiarEstado('${c.nro_factura}', ${c.producto_id}, 'activo')">↩ Reactivar</button>` : ''}
-        ${userInfo.rol === 'superadmin' ? `<button class="btn btn-purple btn-sm" onclick="marcarRevendedora('${c.cliente.replace(/'/g, "\\'")}')">🔁 Es revendedora</button>` : ''}
+        <button class="btn btn-purple btn-sm" onclick="marcarRevendedora('${c.cliente.replace(/'/g, "\\'")}')">🔁 Es revendedora</button>
       </div>
     </div>
   `;
@@ -333,7 +335,6 @@ async function loadTemplates() {
 function renderTemplates() {
   const filtroProducto = document.getElementById('filter-producto').value;
   const filtered = filtroProducto ? templatesData.filter(t => t.producto_nombre === filtroProducto) : templatesData;
-  const isAdmin = userInfo.rol === 'superadmin';
 
   document.getElementById('templates-list').innerHTML = filtered.map(t => `
     <div class="template-card" id="template-${t.id}">
@@ -343,7 +344,7 @@ function renderTemplates() {
           <span class="template-meta"> — Mensaje #${t.n_mensaje} | Día ${t.dia_envio} | ${t.tipo_mensaje}</span>
           <span class="badge ${t.activo ? 'badge-activo' : 'badge-suspendido'}" style="margin-left:8px">${t.activo ? 'Activo' : 'Inactivo'}</span>
         </div>
-        ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.id})">Editar</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.id})">Editar</button>
       </div>
       <div class="template-texto" id="texto-${t.id}">${t.texto_mensaje}</div>
     </div>
@@ -880,7 +881,7 @@ function renderRevendedoras() {
             <td><strong>${r.nombre_odoo}</strong></td>
             <td>${r.numerotelefono || '—'}</td>
             <td><span class="badge ${r.activo ? 'badge-no_quiere' : 'badge-suspendido'}">${r.activo ? 'Excluida' : 'Inactiva'}</span></td>
-            <td><button class="btn btn-secondary btn-sm" onclick="editRevendedora(${r.id})">Editar</button></td>
+            <td>${userInfo.rol === 'superadmin' ? `<button class="btn btn-secondary btn-sm" onclick="editRevendedora(${r.id})">Editar</button>` : ''}</td>
           </tr>`).join('')}
       </tbody>
     </table>

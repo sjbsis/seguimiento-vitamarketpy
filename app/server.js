@@ -144,7 +144,7 @@ app.get('/api/templates', authMiddleware, async (req, res) => {
   }
 });
 
-app.post('/api/templates', authMiddleware, adminOnly, async (req, res) => {
+app.post('/api/templates', authMiddleware, async (req, res) => {
   const { producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo } = req.body;
   try {
     const result = await pool.query(
@@ -157,7 +157,7 @@ app.post('/api/templates', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-app.put('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => {
+app.put('/api/templates/:id', authMiddleware, async (req, res) => {
   const { producto_id, n_mensaje, dia_envio, tipo_mensaje, texto_mensaje, activo } = req.body;
   try {
     await pool.query(
@@ -170,7 +170,7 @@ app.put('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-app.delete('/api/templates/:id', authMiddleware, adminOnly, async (req, res) => {
+app.delete('/api/templates/:id', authMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM mensajes_templates WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
@@ -373,7 +373,7 @@ app.delete('/api/productos-odoo/:id', authMiddleware, adminOnly, async (req, res
 });
 
 // Revendedoras (NO reciben mensajes de seguimiento)
-app.get('/api/revendedoras', authMiddleware, adminOnly, async (req, res) => {
+app.get('/api/revendedoras', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query('SELECT id, nombre_odoo, numerotelefono, activo FROM revendedoras ORDER BY nombre_odoo');
     res.json(result.rows);
@@ -409,7 +409,7 @@ app.put('/api/revendedoras/:id', authMiddleware, adminOnly, async (req, res) => 
 });
 
 // Marcar un cliente del seguimiento como revendedora (la agrega y la saca del seguimiento)
-app.post('/api/revendedoras/desde-cliente', authMiddleware, adminOnly, async (req, res) => {
+app.post('/api/revendedoras/desde-cliente', authMiddleware, async (req, res) => {
   const { cliente } = req.body;
   const client = await pool.connect();
   try {
