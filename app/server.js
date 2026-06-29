@@ -100,7 +100,18 @@ app.get('/api/clientes', authMiddleware, async (req, res) => {
              WHERE me.nro_factura = cs.nro_factura AND me.producto_id = cs.producto_id AND me.n_mensaje = mt.n_mensaje
            )
            LIMIT 1
-        ) as mensaje_hoy
+        ) as mensaje_hoy,
+        (SELECT mt.n_mensaje FROM mensajes_templates mt
+           WHERE mt.producto_id = cs.producto_id
+           AND mt.activo = true
+           AND cs.fecha_factura IS NOT NULL
+           AND mt.dia_envio = (
+             SELECT MIN(mt2.dia_envio) FROM mensajes_templates mt2
+             WHERE mt2.producto_id = cs.producto_id AND mt2.n_mensaje > 1 AND mt2.activo = true
+             AND cs.fecha_factura IS NOT NULL AND mt2.dia_envio > (CURRENT_DATE - cs.fecha_factura)
+           )
+           LIMIT 1
+        ) as proximo_n_mensaje
       FROM clientes_seguimiento cs
       ${where}
       ORDER BY cs.updated_at DESC`;

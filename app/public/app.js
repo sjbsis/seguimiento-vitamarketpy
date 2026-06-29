@@ -239,10 +239,10 @@ function renderClientes() {
         <div class="card-info">📅 Compra: ${formatFecha(c.fecha_factura)}</div>
         <div class="card-info">📨 Mensajes enviados: ${c.mensajes_enviados || 0} | Último: #${c.ultimo_n_mensaje_real ?? c.ultimo_n_mensaje ?? 0}</div>
         <div class="card-info">📤 Último envío: ${c.ultimo_envio ? formatFecha(c.ultimo_envio) : '—'}</div>
-        <div class="card-info">⏭️ Próximo envío: ${c.proximo_dia_envio != null ? formatFecha(sumarDias(c.fecha_factura, c.proximo_dia_envio)) : 'Sin pendientes'}</div>
+        <div class="card-info">⏭️ Próximo envío: ${c.proximo_dia_envio != null ? `${formatFecha(sumarDias(c.fecha_factura, c.proximo_dia_envio))}${c.proximo_n_mensaje != null ? ` — Mensaje #${c.proximo_n_mensaje}` : ''}` : 'Sin pendientes'}</div>
         <div class="card-info" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
-          <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}</span>
+          <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}${dias !== null && dias > 0 && c.proximo_n_mensaje != null ? ` — Msg #${c.proximo_n_mensaje}` : ''}</span>
           ${c.mensaje_hoy != null ? `<span class="badge sem-badge sem-rojo">📨 Hoy: mensaje #${c.mensaje_hoy}</span>` : ''}
         </div>
       </div>
