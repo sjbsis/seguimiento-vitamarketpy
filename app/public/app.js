@@ -51,6 +51,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
 document.getElementById('search-cliente').addEventListener('input', renderClientes);
 document.getElementById('filter-estado').addEventListener('change', renderClientes);
 document.getElementById('filter-con-mensajes').addEventListener('change', renderClientes);
+document.getElementById('filter-hoy').addEventListener('change', renderClientes);
 document.getElementById('filter-producto').addEventListener('change', renderTemplates);
 
 document.getElementById('btn-filtrar').addEventListener('click', loadClientes);
@@ -172,6 +173,7 @@ async function loadClientes() {
 }
 
 function diasParaProximo(c) {
+  if (c.mensaje_hoy != null) return 0; // hay un mensaje que se envía HOY
   if (c.proximo_dia_envio === null || c.proximo_dia_envio === undefined) return null;
   if (c.dias_transcurridos === null || c.dias_transcurridos === undefined) return null;
   return c.proximo_dia_envio - c.dias_transcurridos;
@@ -179,7 +181,8 @@ function diasParaProximo(c) {
 
 function semaforo(dias) {
   if (dias === null) return { clase: 'sem-gris', icono: '⚪', texto: 'Sin mensajes pendientes' };
-  if (dias <= 1) return { clase: 'sem-rojo', icono: '🔴', texto: dias <= 0 ? 'Le toca hoy' : 'Le toca mañana' };
+  if (dias <= 0) return { clase: 'sem-rojo', icono: '🔴', texto: 'Se envía HOY' };
+  if (dias === 1) return { clase: 'sem-rojo', icono: '🔴', texto: 'Le toca mañana' };
   if (dias <= 3) return { clase: 'sem-amarillo', icono: '🟡', texto: `Faltan ${dias} días` };
   return { clase: 'sem-verde', icono: '🟢', texto: `Faltan ${dias} días` };
 }
@@ -188,12 +191,23 @@ function renderClientes() {
   const search = document.getElementById('search-cliente').value.toLowerCase();
   const estado = document.getElementById('filter-estado').value;
   const soloConMensajes = document.getElementById('filter-con-mensajes')?.checked;
+  const soloHoy = document.getElementById('filter-hoy')?.checked;
   let filtered = clientesData.filter(c => {
     const matchSearch = c.cliente.toLowerCase().includes(search) || (c.nombre_producto || '').toLowerCase().includes(search);
     const matchEstado = !estado || c.estado === estado;
     const matchMensajes = !soloConMensajes || (c.mensajes_enviados || 0) > 0;
-    return matchSearch && matchEstado && matchMensajes;
+    const matchHoy = !soloHoy || c.mensaje_hoy != null;
+    return matchSearch && matchEstado && matchMensajes && matchHoy;
   });
+
+  // Contador de los que se envían hoy (sobre todo el universo de clientes activos)
+  const totalHoy = clientesData.filter(c => c.mensaje_hoy != null && c.estado === 'activo').length;
+  const banner = document.getElementById('hoy-banner');
+  if (banner) {
+    banner.innerHTML = totalHoy > 0
+      ? `📨 <strong>${totalHoy}</strong> mensaje${totalHoy !== 1 ? 's' : ''} se ${totalHoy !== 1 ? 'enviarán' : 'enviará'} hoy a las 9 AM`
+      : '✅ Hoy no hay mensajes para enviar';
+  }
 
   // Ordenar por proximidad del próximo mensaje (los que menos faltan primero; los sin pendientes al final)
   filtered.sort((a, b) => {
@@ -227,6 +241,7 @@ function renderClientes() {
         <div class="card-info" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge badge-${c.estado}">${estadoLabel(c.estado)}</span>
           <span class="badge sem-badge ${sem.clase}">${sem.icono} ${sem.texto}</span>
+          ${c.mensaje_hoy != null ? `<span class="badge sem-badge sem-rojo">📨 Hoy: mensaje #${c.mensaje_hoy}</span>` : ''}
         </div>
       </div>
       <div class="card-right">

@@ -64,11 +64,13 @@
             </select>
             <input type="date" id="filter-desde" class="filter-input" title="Desde">
             <input type="date" id="filter-hasta" class="filter-input" title="Hasta">
+            <label class="filter-check"><input type="checkbox" id="filter-hoy"> 📨 Solo los de hoy</label>
             <label class="filter-check"><input type="checkbox" id="filter-con-mensajes"> Solo con mensajes enviados</label>
             <button class="btn btn-primary btn-sm" id="btn-filtrar">Filtrar</button>
             <button class="btn btn-secondary btn-sm" id="btn-limpiar">Limpiar</button>
           </div>
         </div>
+        <div id="hoy-banner" class="hoy-banner"></div>
         <div id="clientes-list" class="cards-grid"></div>
       </div>
 

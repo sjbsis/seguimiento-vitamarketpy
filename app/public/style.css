@@ -189,6 +189,10 @@ body {
 .config-input { width: 100%; }
 @media (max-width: 600px) { .config-row { grid-template-columns: 1fr; } }
 
+/* BANNER HOY */
+.hoy-banner { background: linear-gradient(135deg, var(--teal), var(--mint)); color: white; padding: 14px 20px; border-radius: 12px; margin-bottom: 16px; font-size: 15px; box-shadow: 0 2px 12px rgba(48,165,174,0.25); }
+.hoy-banner:empty { display: none; }
+
 /* EMPTY */
 .empty-state { text-align: center; padding: 60px 20px; color: #bbb; }
 
